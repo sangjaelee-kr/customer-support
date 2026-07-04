@@ -2335,6 +2335,7 @@ function initSupabase() {
 // ══════════════════════════════════════════
 //  대시보드 실시간 데이터 로드
 // ══════════════════════════════════════════
+let dashRecentTickets = [];
 async function loadDashboard() {
   if (!sb || !currentUser) return;
   const role = currentUser.role;
@@ -2398,19 +2399,20 @@ async function loadDashboard() {
 
     // 최근 요청 테이블
     const { data: recent } = await applyFilter(sb.from('tickets')
-      .select('ticket_number, title, category, status, created_at'))
+      .select('id, ticket_number, title, category, status, created_at'))
       .order('created_at', { ascending: false }).limit(5);
+    dashRecentTickets = recent || [];
     const tbody = document.getElementById('dash-recent-tbody');
     if (tbody) {
       if (!recent || !recent.length) {
         tbody.innerHTML = '<tr><td colspan="5" style="padding:16px;text-align:center;color:var(--faint);">요청 없음</td></tr>';
       } else {
-        tbody.innerHTML = recent.map(t => {
+        tbody.innerHTML = recent.map((t, i) => {
           const catL = CATEGORY_LABELS[t.category] || t.category || '—';
           const catC = CATEGORY_BADGE[t.category] || 'b-gray';
           const stL  = STATUS_LABELS[t.status] || t.status;
           const stC  = STATUS_BADGE[t.status] || 'b-gray';
-          return `<tr><td><span style="font-variant-numeric:tabular-nums;color:var(--accent);font-weight:600;">${escHtml(t.ticket_number||'')}</span></td>` +
+          return `<tr style="cursor:pointer;" onclick="showDetail(dashRecentTickets[${i}])"><td><span style="font-variant-numeric:tabular-nums;color:var(--accent);font-weight:600;">${escHtml(t.ticket_number||'')}</span></td>` +
             `<td>${escHtml(t.title||'')}</td><td><span class="badge ${catC}">${catL}</span></td>` +
             `<td><span class="badge ${stC}">${stL}</span></td><td style="color:var(--faint);">${fmtTime(t.created_at).slice(0,10)}</td></tr>`;
         }).join('');
