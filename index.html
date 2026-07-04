@@ -233,7 +233,17 @@ textarea{resize:vertical;min-height:100px;}
   }
   .navtabs .nt.active{border-bottom-color:transparent;border-left-color:var(--accent);background:var(--accent-l);}
 
-  .stats{grid-template-columns:repeat(2,1fr)!important;}
+  /* KPI 카드: 모바일에서도 가로 1줄 배열, 카드는 축소 (넘치면 가로 스크롤) */
+  .stats{
+    display:flex!important;
+    overflow-x:auto;
+    gap:8px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .stats .stat{flex:1 1 0;min-width:104px;padding:10px 12px;}
+  .stats .stat-label{font-size:10px;margin-bottom:3px;white-space:nowrap;}
+  .stats .stat-val{font-size:18px;}
+  .stats .stat-sub{font-size:10px;margin-top:1px;white-space:nowrap;}
 
   .form-grid{grid-template-columns:1fr!important;}
 
@@ -264,7 +274,9 @@ textarea{resize:vertical;min-height:100px;}
 }
 
 @media (max-width:480px){
-  .stats{grid-template-columns:1fr!important;}
+  .stats{gap:6px;}
+  .stats .stat{min-width:0;flex-basis:0;padding:8px 8px;}
+  .stats .stat-val{font-size:15px;}
   .login-wrap{padding:20px;}
   .login-box{width:100%;padding:28px 20px;}
 
