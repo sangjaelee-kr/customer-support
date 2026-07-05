@@ -109,7 +109,7 @@ textarea{resize:vertical;min-height:100px;}
 .tbl{width:100%;border-collapse:collapse;}
 .tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .tbl th{font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;}
-.tbl td{padding:11px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+.tbl td{padding:11px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;white-space:nowrap;}
 .tbl tr:last-child td{border-bottom:none;}
 .tbl tr:hover td{background:var(--surface2);cursor:pointer;}
 
@@ -2887,7 +2887,7 @@ function renderCompanies(companies) {
       <tr>
         <td style="font-weight:600;">${escHtml(c.name)}</td>
         <td style="font-size:12px;">${escHtml(c.industry || '—')}</td>
-        <td style="font-size:12px;max-width:160px;">${products}</td>
+        <td style="font-size:12px;max-width:160px;white-space:normal;">${products}</td>
         <td style="font-size:12px;">${escHtml(c.account_manager || '—')}</td>
         <td style="font-size:12px;">${escHtml(c.tech_support_manager || '—')}</td>
         <td style="font-size:12px;">${startDate}</td>
