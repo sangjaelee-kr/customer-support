@@ -3074,6 +3074,15 @@ function toggleNotifyDetail(tr) {
   const detailRow = tr.nextElementSibling;
   if (!detailRow || !detailRow.classList.contains('notify-detail-row')) return;
   const isOpen = detailRow.style.display !== 'none';
+
+  // 다른 곳에서 열려있던 상세 행은 모두 접기
+  document.querySelectorAll('#notify-tbody .notify-detail-row').forEach(row => {
+    if (row !== detailRow && row.style.display !== 'none') {
+      row.style.display = 'none';
+      if (row.previousElementSibling) row.previousElementSibling.style.background = '';
+    }
+  });
+
   detailRow.style.display = isOpen ? 'none' : 'table-row';
   tr.style.background = isOpen ? '' : 'var(--accent-l)';
 }
