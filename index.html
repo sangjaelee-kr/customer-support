@@ -987,7 +987,7 @@ textarea{resize:vertical;min-height:100px;}
             <select id="notify-filter-type" onchange="loadNotifyLog()" style="padding:7px 10px;border:1px solid var(--border-md);border-radius:var(--r-md);font-size:12px;">
               <option value="">전체 유형</option>
               <option value="Slack">Slack</option>
-              <option value="Outlook">Outlook</option>
+              <option value="email">Gmail</option>
             </select>
             <select id="notify-filter-status" onchange="loadNotifyLog()" style="padding:7px 10px;border:1px solid var(--border-md);border-radius:var(--r-md);font-size:12px;">
               <option value="">전체 상태</option>
@@ -3094,7 +3094,7 @@ async function loadNotifyLog() {
     return `<tr style="cursor:pointer;" onclick="toggleNotifyDetail(this)">
       <td style="font-size:11px;font-variant-numeric:tabular-nums;color:var(--faint);">${escHtml(n.id.slice(0,8))}…</td>
       <td style="font-size:12px;font-weight:600;">${escHtml(ticketNum)}</td>
-      <td><span class="badge b-gray" style="font-size:11px;">${escHtml(n.channel || '—')}</span></td>
+      <td><span class="badge ${n.channel === 'slack' ? 'b-accent' : 'b-red'}" style="font-size:11px;">${n.channel === 'email' ? 'Gmail' : escHtml(n.channel || '—')}</span></td>
       <td style="font-size:12px;">${escHtml(EVENT_TYPE_KO[n.event_type] || n.event_type || '—')}</td>
       <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(n.recipient || '—')}</td>
       <td>${statusBadge}</td>
