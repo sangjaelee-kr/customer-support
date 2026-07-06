@@ -1590,6 +1590,18 @@ function doLogin() {
   sb.from('users').select('id, name, role, company_id, phone, is_active, companies(name)').eq('email', email).single().then(({ data: u, error: ue }) => {
     if (btn) { btn.disabled = false; btn.textContent = '로그인'; }
     if (ue || !u) {
+      // DB에 없으면 ACCOUNTS 로컬 폴백
+      const localAcct = ACCOUNTS[email];
+      if (localAcct) {
+        if (localAcct.pw && pw !== localAcct.pw) {
+          errEl.textContent = '비밀번호가 올바르지 않습니다.';
+          errEl.style.display = '';
+          return;
+        }
+        errEl.style.display = 'none';
+        enterApp(email, localAcct);
+        return;
+      }
       errEl.textContent = '등록되지 않은 계정입니다. 담당자에게 문의하세요.';
       errEl.style.display = '';
       return;
