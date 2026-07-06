@@ -936,7 +936,7 @@ textarea{resize:vertical;min-height:100px;}
         </div>
         <div class="card" style="padding:0;overflow:hidden;">
           <div class="tbl-scroll"><table class="tbl">
-            <thead><tr><th>고객사명</th><th>산업군</th><th>제품</th><th>영업담당</th><th>기술지원</th><th>계약 시작일</th><th>계약 만료일</th><th>잔여일</th><th>상태</th><th>액션</th></tr></thead>
+            <thead><tr><th>고객사명</th><th>산업군</th><th>제품</th><th>영업담당</th><th>기술지원</th><th>Salesforce ID</th><th>계약 시작일</th><th>계약 만료일</th><th>잔여일</th><th>상태</th><th>액션</th></tr></thead>
             <tbody id="companies-tbody">
               <tr><td colspan="9" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>
             </tbody>
@@ -1282,6 +1282,10 @@ textarea{resize:vertical;min-height:100px;}
         <div class="form-group span2">
           <label>고객사명 <span class="req">*</span></label>
           <input type="text" id="co-name" placeholder="㈜ 예시회사">
+        </div>
+        <div class="form-group span2">
+          <label>Salesforce ID</label>
+          <input type="text" id="co-salesforce-id" placeholder="001XXXXXXXXXXXXXXX">
         </div>
         <div class="form-group span2">
           <label>산업군</label>
@@ -2916,6 +2920,7 @@ function renderCompanies(companies) {
         <td style="font-size:12px;max-width:160px;white-space:normal;">${products}</td>
         <td style="font-size:12px;">${escHtml(c.account_manager || '—')}</td>
         <td style="font-size:12px;">${escHtml(c.tech_support_manager || '—')}</td>
+        <td style="font-size:12px;">${c.salesforce_id ? `<span style="font-family:monospace;background:var(--surface2);padding:2px 6px;border-radius:4px;">${escHtml(c.salesforce_id)}</span>` : '—'}</td>
         <td style="font-size:12px;">${startDate}</td>
         <td style="font-size:12px;">${endDate}</td>
         <td>${daysHtml}</td>
@@ -2936,6 +2941,7 @@ function openEditCompany(c) {
   document.getElementById('co-industry').value = c.industry || '';
   document.getElementById('co-tech-manager').value = c.tech_support_manager || '';
   document.getElementById('co-manager').value = c.account_manager || '';
+  document.getElementById('co-salesforce-id').value = c.salesforce_id || '';
   document.getElementById('co-start').value = c.contract_start ? c.contract_start.slice(0,10) : '';
   document.getElementById('co-end').value   = c.contract_end   ? c.contract_end.slice(0,10)   : '';
   document.getElementById('co-env-info').value = c.environment_info
@@ -2964,6 +2970,9 @@ async function submitCompany() {
   if (techMgr) payload.tech_support_manager = techMgr;
   const manager = document.getElementById('co-manager')?.value?.trim();
   if (manager) payload.account_manager = manager;
+  const salesforceId = document.getElementById('co-salesforce-id')?.value?.trim();
+  if (salesforceId) payload.salesforce_id = salesforceId;
+  else payload.salesforce_id = null;
   const start = document.getElementById('co-start')?.value;
   const end   = document.getElementById('co-end')?.value;
   if (start) payload.contract_start = start;
