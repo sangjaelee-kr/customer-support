@@ -108,6 +108,8 @@ textarea{resize:vertical;min-height:100px;}
 /* ── table ── */
 .tbl{width:100%;border-collapse:collapse;}
 .tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.ticket-list-scroll{max-height:560px;overflow-y:auto;}
+.ticket-list-scroll thead th{position:sticky;top:0;background:var(--surface);z-index:1;}
 .tbl th{font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;}
 .tbl td{padding:11px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;white-space:nowrap;}
 .tbl tr:last-child td{border-bottom:none;}
@@ -579,7 +581,7 @@ textarea{resize:vertical;min-height:100px;}
       <!-- 목록 / 상세 토글 -->
       <div id="support-list">
         <div class="card" style="padding:0;overflow:hidden;">
-          <div class="tbl-scroll"><table class="tbl">
+          <div class="tbl-scroll ticket-list-scroll"><table class="tbl">
             <thead><tr>
               <th>요청 번호</th><th>제목</th><th>카테고리</th><th>긴급도</th><th>상태</th><th>고객사</th><th>요청자</th><th>담당자</th><th>접수일</th>
             </tr></thead>
