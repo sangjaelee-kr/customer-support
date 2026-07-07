@@ -654,12 +654,12 @@ textarea{resize:vertical;min-height:100px;}
       <div id="lib-panel-files">
       <div class="filter-bar">
         <input class="search-box" id="lib-search" placeholder="자료명 검색..." oninput="renderLibFiles()">
-        <span class="filter-chip active" onclick="setLibProduct('',this)">전체</span>
-        <span class="filter-chip" onclick="setLibProduct('Tableau Server',this)">Tableau Server</span>
-        <span class="filter-chip" onclick="setLibProduct('Tableau Cloud',this)">Tableau Cloud</span>
-        <span class="filter-chip" onclick="setLibProduct('Tableau Desktop',this)">Tableau Desktop</span>
-        <span class="filter-chip" onclick="setLibProduct('Dataworks',this)">Dataworks</span>
-        <span class="filter-chip" onclick="setLibProduct('AgentWorks',this)">AgentWorks</span>
+        <span class="filter-chip active" onclick="setLibCategory('',this)">전체</span>
+        <span class="filter-chip" onclick="setLibCategory('tableau',this)">Tableau</span>
+        <span class="filter-chip" onclick="setLibCategory('tableau-server',this)">Tableau Server</span>
+        <span class="filter-chip" onclick="setLibCategory('tableau-cloud',this)">Tableau Cloud</span>
+        <span class="filter-chip" onclick="setLibCategory('edu',this)">교육</span>
+        <span class="filter-chip" onclick="setLibCategory('faq',this)">FAQ</span>
       </div>
       <div id="lib-files-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;">
         <div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</div>
@@ -971,7 +971,7 @@ textarea{resize:vertical;min-height:100px;}
         </div>
         <div class="card" style="padding:0;overflow:hidden;">
           <div class="tbl-scroll"><table class="tbl">
-            <thead><tr><th>제목</th><th>카테고리</th><th>제품</th><th>파일명</th><th>공개</th><th>다운로드</th><th>등록일</th><th>작업</th></tr></thead>
+            <thead><tr><th>제목</th><th>카테고리</th><th>파일명</th><th>공개</th><th>다운로드</th><th>등록일</th><th>작업</th></tr></thead>
             <tbody id="docs-tbody">
               <tr><td colspan="8" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>
             </tbody>
@@ -1464,25 +1464,14 @@ textarea{resize:vertical;min-height:100px;}
           <label>제목 <span class="req">*</span></label>
           <input type="text" id="doc-title" placeholder="자료 제목">
         </div>
-        <div class="form-group">
+        <div class="form-group" style="grid-column:1/-1;">
           <label>카테고리 <span class="req">*</span></label>
           <select id="d-category">
-            <option value="manual">설치/운영 매뉴얼</option>
-            <option value="release_note">릴리즈 노트</option>
-            <option value="guide">가이드</option>
-            <option value="template">양식/템플릿</option>
-            <option value="other">기타</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>제품</label>
-          <select id="d-product">
-            <option value="">선택 안 함</option>
-            <option value="Tableau Server">Tableau Server</option>
-            <option value="Tableau Cloud">Tableau Cloud</option>
-            <option value="Tableau Desktop">Tableau Desktop</option>
-            <option value="Dataworks">Dataworks</option>
-            <option value="AgentWorks">AgentWorks</option>
+            <option value="tableau">Tableau</option>
+            <option value="tableau-server">Tableau Server</option>
+            <option value="tableau-cloud">Tableau Cloud</option>
+            <option value="edu">교육</option>
+            <option value="faq">FAQ</option>
           </select>
         </div>
         <div class="form-group" style="grid-column:1/-1;">
@@ -1956,7 +1945,7 @@ async function loadIntegrationLogs() {
 }
 
 // ─── 자료실 관리 ────────────────────────────────────────
-const DOC_CATEGORY_LABEL = { manual:'매뉴얼', release_note:'릴리즈 노트', guide:'가이드', template:'양식/템플릿', other:'기타' };
+const DOC_CATEGORY_LABEL = { tableau:'Tableau', 'tableau-server':'Tableau Server', 'tableau-cloud':'Tableau Cloud', edu:'교육', faq:'FAQ' };
 
 async function loadDocuments() {
   const tbody = document.getElementById('docs-tbody');
@@ -1976,7 +1965,6 @@ async function loadDocuments() {
     <tr>
       <td style="font-weight:600;font-size:13px;">${escHtml(d.title)}</td>
       <td><span class="badge b-blue">${DOC_CATEGORY_LABEL[d.category] || d.category}</span></td>
-      <td style="font-size:12px;color:var(--faint);">${escHtml(d.product || '-')}</td>
       <td>${fileCell}</td>
       <td><span class="badge ${d.is_public ? 'b-green' : 'b-gray'}">${d.is_public ? '공개' : '비공개'}</span></td>
       <td style="font-variant-numeric:tabular-nums;text-align:right;">${(d.download_count || 0).toLocaleString()}</td>
@@ -1993,8 +1981,7 @@ function openEditDoc(d) {
   document.getElementById('modal-doc-title').textContent = '자료 수정';
   document.getElementById('d-id').value = d.id;
   document.getElementById('doc-title').value = d.title || '';
-  document.getElementById('d-category').value = d.category || 'manual';
-  document.getElementById('d-product').value = d.product || '';
+  document.getElementById('d-category').value = d.category || 'tableau';
   document.getElementById('doc-description').value = d.description || '';
   document.getElementById('d-filename').value = d.file_name || '';
   // 기존 파일명 드롭존에 표시
@@ -2056,11 +2043,9 @@ async function submitDocument() {
     storage_path = upData.path;
   }
 
-  const productVal = document.getElementById('d-product').value;
   const payload = {
     title,
     category: document.getElementById('d-category').value,
-    product: productVal || null,
     description: document.getElementById('doc-description').value.trim() || null,
     file_name,
     file_size,
@@ -4344,8 +4329,8 @@ function switchLibTab(tab) {
 let allLibDocs = [];
 let libProductFilter = '';
 
-const DOC_CAT_ICON = { manual:'📦', guide:'📦', release_note:'📋', template:'📄', other:'📁' };
-const DOC_CAT_LABEL_KO = { manual:'설치/운영 매뉴얼', guide:'가이드', release_note:'릴리스 노트', template:'양식/템플릿', other:'기타' };
+const DOC_CAT_ICON = { tableau:'📊', 'tableau-server':'🖥️', 'tableau-cloud':'☁️', edu:'🎓', faq:'❓' };
+const DOC_CAT_LABEL_KO = { tableau:'Tableau', 'tableau-server':'Tableau Server', 'tableau-cloud':'Tableau Cloud', edu:'교육', faq:'FAQ' };
 
 async function loadLibFiles() {
   const grid = document.getElementById('lib-files-grid');
@@ -4362,7 +4347,7 @@ async function loadLibFiles() {
   renderLibFiles();
 }
 
-function setLibProduct(product, el) {
+function setLibCategory(product, el) {
   libProductFilter = product;
   document.querySelectorAll('#lib-panel-files .filter-chip').forEach(c => c.classList.remove('active'));
   if (el) el.classList.add('active');
@@ -4376,7 +4361,7 @@ function renderLibFiles() {
   const q = (document.getElementById('lib-search')?.value || '').toLowerCase();
   const list = allLibDocs.filter(d => {
     if (!isAdmin && !d.is_public) return false;
-    const matchProd = !libProductFilter || (d.product || '') === libProductFilter;
+    const matchProd = !libProductFilter || (d.category || '') === libProductFilter;
     const matchQ = !q || (d.title||'').toLowerCase().includes(q) || (d.file_name||'').toLowerCase().includes(q);
     return matchProd && matchQ;
   });
@@ -4452,8 +4437,7 @@ function openNewDocModal() {
   const isPubChk = document.getElementById('d-is-public');
   if (isPubChk) { isPubChk.checked = true; document.getElementById('d-is-public-label').textContent = '공개 (고객에게 노출됨)'; }
   document.getElementById('doc-title').value = '';
-  document.getElementById('d-category').value = 'manual';
-  document.getElementById('d-product').value = '';
+  document.getElementById('d-category').value = 'tableau';
   document.getElementById('doc-description').value = '';
   document.getElementById('d-filename').value = '';
   _docFile = null;
@@ -4474,8 +4458,7 @@ function openLibEditDoc(d) {
   document.getElementById('d-storage-path').value = d.storage_path || '';
   document.getElementById('d-file-size').value = d.file_size || '';
   document.getElementById('doc-title').value = d.title || '';
-  document.getElementById('d-category').value = d.category || 'manual';
-  document.getElementById('d-product').value = d.product || '';
+  document.getElementById('d-category').value = d.category || 'tableau';
   document.getElementById('doc-description').value = d.description || '';
   const isPubChk = document.getElementById('d-is-public');
   if (isPubChk) { isPubChk.checked = d.is_public !== false; document.getElementById('d-is-public-label').textContent = isPubChk.checked ? '공개 (고객에게 노출됨)' : '비공개 (고객에게 숨김)'; }
