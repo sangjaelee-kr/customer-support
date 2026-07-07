@@ -2464,10 +2464,10 @@ async function loadDashboard() {
   const ACTIVE = ['received','classifying','in_progress','assigned','pending_customer','on_hold'];
 
   if (role === 'customer' || role === 'internal') {
-    const companyId = currentUser.company;
+    const companyId = currentUser.company_id;
     const userId    = currentUser.id;
-    // 본인이 등록한 티켓 기준
-    const applyFilter = (q) => q.eq('created_by', userId);
+    // 소속 고객사 전체 티켓 기준 (company_id 우선, 없으면 created_by)
+    const applyFilter = (q) => companyId ? q.eq('company_id', companyId) : q.eq('created_by', userId);
 
     // 라이선스
     if (companyId) {
@@ -2662,7 +2662,9 @@ async function loadTickets() {
     .order('created_at', { ascending: false });
 
   if (DEMO_COMPANY_ID) query = query.eq('company_id', DEMO_COMPANY_ID);
-  if (currentUser?.role === 'customer' && currentUser?.id) query = query.eq('created_by', currentUser.id);
+  else if ((currentUser?.role === 'customer' || currentUser?.role === 'internal') && currentUser?.company_id) {
+    query = query.eq('company_id', currentUser.company_id);
+  }
 
   const { data, error } = await query;
   if (error) {
@@ -3609,10 +3611,12 @@ async function loadCustomerRdList(activeId) {
   if (!panel) return;
   panel.innerHTML = '<div style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</div>';
   if (!sb || !currentUser) return;
-  const { data } = await sb.from('tickets')
+  const rdQ = sb.from('tickets')
     .select('id, ticket_number, title, category, priority, status, created_at, due_date')
-    .eq('created_by', currentUser.id)
     .order('created_at', { ascending: false });
+  const { data } = currentUser.company_id
+    ? await rdQ.eq('company_id', currentUser.company_id)
+    : await rdQ.eq('created_by', currentUser.id);
   customerRdTickets = data || [];
   renderCustomerRdListPanel(activeId);
 }
