@@ -763,6 +763,7 @@ textarea{resize:vertical;min-height:100px;}
                       <span style="font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.3px;white-space:nowrap;" id="rd-ticket-num-inline">—</span>
                       <span class="badge b-gray" id="rd-status-badge"></span>
                       <span style="font-size:17px;font-weight:800;" id="rd-title">—</span>
+                      <button id="rd-owner-edit-btn" class="btn btn-outline btn-sm" style="display:none;white-space:nowrap;" onclick="openEditRequestModal()">수정</button>
                     </div>
                   </div>
                   <!-- 우측 상단 컨트롤 (admin only) -->
@@ -1262,6 +1263,62 @@ textarea{resize:vertical;min-height:100px;}
     <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;">
       <button class="btn btn-ghost" onclick="closeModal('modal-new')">취소</button>
       <button class="btn btn-primary" onclick="submitRequest()">요청 접수</button>
+    </div>
+  </div>
+</div>
+
+<!-- 요청 수정 (작성자 본인) -->
+<div id="modal-edit-request" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.35);align-items:center;justify-content:center;">
+  <div class="modal-box" style="background:var(--surface);border-radius:var(--r-lg);width:560px;max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:16px;font-weight:800;">요청 수정</div>
+      <button onclick="closeModal('modal-edit-request')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--faint);">✕</button>
+    </div>
+    <div style="padding:24px;">
+      <div class="form-grid" style="gap:16px;">
+        <div class="form-group span2">
+          <label>요청 제목 <span class="req">*</span></label>
+          <input type="text" id="edit-title">
+        </div>
+        <div class="form-group">
+          <label>요청 카테고리 <span class="req">*</span></label>
+          <select id="edit-category">
+            <option value="tech_support">기술지원</option>
+            <option value="contract">계약 문의</option>
+            <option value="license">라이선스 문의</option>
+            <option value="education">교육 문의</option>
+            <option value="other">기타 문의</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>제품명</label>
+          <select id="edit-product">
+            <option value="">제품 선택 (선택)</option>
+            <option>Tableau Server</option>
+            <option>Tableau Cloud</option>
+            <option>Tableau Desktop</option>
+            <option>Dataseworks</option>
+            <option>AgentWorks</option>
+            <option>기타</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>긴급도 <span class="req">*</span></label>
+          <select id="edit-priority">
+            <option value="normal">일반</option>
+            <option value="high">빠른 확인 필요</option>
+            <option value="critical">긴급</option>
+          </select>
+        </div>
+        <div class="form-group span2">
+          <label>요청 내용 <span class="req">*</span></label>
+          <textarea id="edit-description" style="min-height:120px;"></textarea>
+        </div>
+      </div>
+    </div>
+    <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;">
+      <button class="btn btn-ghost" onclick="closeModal('modal-edit-request')">취소</button>
+      <button class="btn btn-primary" onclick="saveEditRequest()">저장</button>
     </div>
   </div>
 </div>
@@ -2849,6 +2906,44 @@ async function submitRequest() {
   await loadTickets();
 }
 
+function openEditRequestModal() {
+  if (!rdTicket) return;
+  document.getElementById('edit-title').value       = rdTicket.title || '';
+  document.getElementById('edit-category').value    = rdTicket.category || '';
+  document.getElementById('edit-product').value     = rdTicket.product || '';
+  document.getElementById('edit-priority').value    = rdTicket.priority || 'normal';
+  document.getElementById('edit-description').value = rdTicket.description || '';
+  openModal('modal-edit-request');
+}
+
+let _savingEditRequest = false;
+async function saveEditRequest() {
+  if (!rdTicket || !sb || _savingEditRequest) return;
+  const title       = document.getElementById('edit-title').value.trim();
+  const category    = document.getElementById('edit-category').value;
+  const product     = document.getElementById('edit-product').value;
+  const priority    = document.getElementById('edit-priority').value;
+  const description = document.getElementById('edit-description').value.trim();
+  if (!title || !category || !description) {
+    showToast('제목, 카테고리, 내용은 필수 항목입니다.', true);
+    return;
+  }
+  _savingEditRequest = true;
+  const { error } = await sb.from('tickets')
+    .update({ title, category, product: product || null, priority, description })
+    .eq('id', rdTicket.id);
+  _savingEditRequest = false;
+  if (error) { showToast('수정 실패: ' + error.message, true); return; }
+  const patch = { title, category, product: product || null, priority, description };
+  const mgIdx = allMgTickets.findIndex(t => t.id === rdTicket.id);
+  if (mgIdx !== -1) Object.assign(allMgTickets[mgIdx], patch);
+  const custIdx = customerRdTickets.findIndex(t => t.id === rdTicket.id);
+  if (custIdx !== -1) Object.assign(customerRdTickets[custIdx], patch);
+  closeModal('modal-edit-request');
+  showToast('✅ 요청이 수정됐습니다.');
+  selectRdTicket(null, rdTicket);
+}
+
 // ══════════════════════════════════════════
 //  토스트
 // ══════════════════════════════════════════
@@ -3868,7 +3963,7 @@ async function selectRdTicket(idx, directTicket) {
   // DB에서 전체 필드 재조회
   if (sb) {
     const { data } = await sb.from('tickets')
-      .select('id, ticket_number, title, description, category, product, priority, status, created_at, assigned_to, assignee:assigned_to(id,name), company:company_id(name), requester:created_by(name)')
+      .select('id, ticket_number, title, description, category, product, priority, status, created_at, created_by, assigned_to, assignee:assigned_to(id,name), company:company_id(name), requester:created_by(name)')
       .eq('id', rdTicket.id).single();
     if (data) rdTicket = data;
   }
@@ -3943,6 +4038,11 @@ async function selectRdTicket(idx, directTicket) {
   const memoCard  = document.getElementById('rd-memo-card');
   if (adminCtrl) adminCtrl.style.display = isAdminUser ? 'flex' : 'none';
   if (memoCard)  memoCard.style.display  = isAdminUser ? ''     : 'none';
+
+  // 요청 작성자 본인 수정 버튼
+  const ownerEditBtn = document.getElementById('rd-owner-edit-btn');
+  const isOwner = currentUser && rdTicket.created_by === currentUser.id;
+  if (ownerEditBtn) ownerEditBtn.style.display = isOwner ? '' : 'none';
 
   // 처리 이력 + 고객 대화 + 내부 메모 + 첨부파일
   const historyBox = document.getElementById('rd-history');
