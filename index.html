@@ -3617,7 +3617,7 @@ async function toggleUserActive(id, current) {
 
 async function deleteUser(id, name) {
   if (!confirm(name + ' 사용자를 삭제하시겠습니까?')) return;
-  const { error } = await sb.from('users').delete().eq('id', id);
+  const { error } = await sb.rpc('delete_user_safely', { user_id: id });
   if (error) { showToast('삭제 실패: ' + error.message, true); return; }
   showToast('✅ ' + name + ' 삭제 완료');
   await loadUsers();
