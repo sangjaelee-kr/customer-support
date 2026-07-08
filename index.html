@@ -814,7 +814,7 @@ textarea{resize:vertical;min-height:100px;}
                     <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">긴급도</div>
                     <div style="font-size:13px;font-weight:600;" id="rd-priority">—</div>
                   </div>
-                  <div style="flex:1;padding:10px 16px;">
+                  <div style="flex:1;padding:10px 16px;" id="rd-due-col">
                     <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">완료예정일</div>
                     <div style="font-size:13px;font-weight:600;color:var(--text);" id="rd-due-date-display">—</div>
                   </div>
@@ -1904,8 +1904,10 @@ function showPage(tabEl, pageId) {
     if (isCustomerUser) {
       const adminCtrl = document.getElementById('rd-admin-controls');
       const memoCard  = document.getElementById('rd-memo-card');
+      const dueCol    = document.getElementById('rd-due-col');
       if (adminCtrl) adminCtrl.style.display = 'none';
       if (memoCard)  memoCard.style.display  = 'none';
+      if (dueCol)    dueCol.style.display    = 'none';
       loadCustomerRdList();
     } else {
       if (allMgTickets.length === 0) loadAllTickets().then(() => renderRdList());
@@ -2168,6 +2170,9 @@ async function showDetail(ticket) {
     // allTickets를 customerRdTickets로 동기화하여 좌측 패널 렌더
     if (allTickets && allTickets.length) customerRdTickets = allTickets;
     renderCustomerRdListPanel(ticket.id);
+
+    const dueCol = document.getElementById('rd-due-col');
+    if (dueCol) dueCol.style.display = 'none';
 
     selectRdTicket(null, ticket);
     return;
