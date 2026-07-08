@@ -2931,7 +2931,7 @@ function renderCompanies(companies) {
     tbody.innerHTML = '<tr><td colspan="11" style="padding:40px;text-align:center;color:var(--faint);">등록된 고객사가 없습니다.</td></tr>';
     return;
   }
-  const isAdmin = currentUser && ['tech_support','admin'].includes(currentUser.role);
+  const isAdmin = currentUser && ['tech_support','admin','sales'].includes(currentUser.role);
   const today = new Date();
   tbody.innerHTML = companies.map(c => {
     const stLabel = STATUS_CO_LABELS[c.status] || c.status || '—';
