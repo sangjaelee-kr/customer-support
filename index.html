@@ -787,7 +787,6 @@ textarea{resize:vertical;min-height:100px;}
                     <button class="btn btn-outline btn-sm" style="white-space:nowrap;" onclick="saveRdDueDate()">예정일변경</button>
                   </div>
                 </div>
-                <div style="display:flex;gap:8px;margin-bottom:12px;" id="rd-badges"></div>
                 <!-- 요청 정보 가로 바 -->
                 <div class="rd-info-bar" style="display:flex;gap:0;margin-bottom:8px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;">
                   <div style="flex:1;padding:10px 16px;border-right:1px solid var(--border);">
@@ -3987,11 +3986,7 @@ async function selectRdTicket(idx, directTicket) {
   document.getElementById('rd-title').textContent = rdTicket.title || '—';
   document.getElementById('rd-description').textContent = rdTicket.description || '(내용 없음)';
 
-  // 배지
   const catL = CATEGORY_LABELS[rdTicket.category] || rdTicket.category || '—';
-  document.getElementById('rd-badges').innerHTML =
-    `<span class="badge b-red">${escHtml(catL)}</span>` +
-    (rdTicket.product ? `<span class="badge b-gray">${escHtml(rdTicket.product)}</span>` : '');
 
   // 상태 셀렉트 현재값
   const rdSel = document.getElementById('rd-status-select');
