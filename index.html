@@ -4082,9 +4082,8 @@ async function loadRdHistory() {
     return;
   }
   const latest      = data[0];
-  const latestWho   = latest.changed_by?.name || '';
   const latestLabel = ACTION_LABELS[latest.action] || latest.action;
-  if (summaryEl) summaryEl.textContent = `최근: ${latestLabel}${latestWho ? ' · ' + latestWho : ''} · ${fmtTime(latest.created_at)}`;
+  if (summaryEl) summaryEl.textContent = `최근: ${latestLabel} · ${fmtTime(latest.created_at)}`;
   if (arrowEl) arrowEl.textContent = `전체 ${data.length}건 보기 ▾`;
   container.innerHTML = data.map(h => {
     const color    = ACTION_COLORS[h.action] || 'var(--faint)';
