@@ -779,11 +779,12 @@ textarea{resize:vertical;min-height:100px;}
                       <option value="completed">완료</option>
                       <option value="cancelled">취소</option>
                     </select>
+                    <button class="btn btn-outline btn-sm" style="white-space:nowrap;" onclick="saveRdStatus()">상태 변경</button>
                     <label style="font-size:11px;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:4px;">
                       완료예정일
                       <input type="date" id="rd-due-date" style="padding:4px 6px;border:1px solid var(--border-md);border-radius:var(--r-md);font-size:12px;color:var(--text);background:var(--surface);">
                     </label>
-                    <button class="btn btn-primary btn-sm" style="white-space:nowrap;" onclick="saveRequestDetail()">저장</button>
+                    <button class="btn btn-outline btn-sm" style="white-space:nowrap;" onclick="saveRdDueDate()">예정일변경</button>
                   </div>
                 </div>
                 <div style="display:flex;gap:8px;margin-bottom:12px;" id="rd-badges"></div>
@@ -4277,41 +4278,33 @@ async function saveMemo() {
 }
 
 let _savingDetail = false;
-async function saveRequestDetail() {
+async function saveRdStatus() {
   if (!rdTicket || !sb || _savingDetail) return;
   _savingDetail = true;
-  const status  = document.getElementById('rd-status-select').value;
-  const memo    = document.getElementById('rd-reply').value.trim();
-  const dueDate = document.getElementById('rd-due-date')?.value || null;
+  const status = document.getElementById('rd-status-select').value;
   const prevStatus = rdTicket.status;
-  rdTicket.status   = status;
-  rdTicket.due_date = dueDate;
-  const payload = { status, due_date: dueDate };
-  // 완료예정일 표시 즉시 반영
-  const dueDateDisplay = document.getElementById('rd-due-date-display');
-  if (dueDateDisplay) dueDateDisplay.textContent = dueDate ? dueDate : '—';
-  const { error } = await sb.from('tickets').update(payload).eq('id', rdTicket.id);
+  if (status === prevStatus) { _savingDetail = false; showToast('상태 변경 사항이 없습니다.'); return; }
+  rdTicket.status = status;
+  const { error } = await sb.from('tickets').update({ status }).eq('id', rdTicket.id);
   if (error) { rdTicket.status = prevStatus; _savingDetail = false; showToast('저장 실패: ' + error.message, true); return; }
   // 상태 변경 이력 — DB 트리거가 note 없이 자동 생성한 경우 업데이트, 없으면 새로 삽입
-  if (status !== prevStatus) {
-    const prevLabel = STATUS_LABELS[prevStatus] || prevStatus;
-    const nextLabel = STATUS_LABELS[status] || status;
-    const histNote  = `${prevLabel} → ${nextLabel}`;
-    const since     = new Date(Date.now() - 5000).toISOString();
-    const { data: autoEntry } = await sb.from('ticket_history')
-      .select('id').eq('ticket_id', rdTicket.id).eq('action', 'status_changed')
-      .is('note', null).gte('created_at', since)
-      .order('created_at', { ascending: false }).limit(1);
-    if (autoEntry && autoEntry.length) {
-      await sb.from('ticket_history')
-        .update({ note: histNote, changed_by: currentUser?.id || null })
-        .eq('id', autoEntry[0].id);
-    } else {
-      await sb.from('ticket_history').insert({
-        ticket_id: rdTicket.id, action: 'status_changed',
-        note: histNote, changed_by: currentUser?.id || null
-      });
-    }
+  const prevLabel = STATUS_LABELS[prevStatus] || prevStatus;
+  const nextLabel = STATUS_LABELS[status] || status;
+  const histNote  = `${prevLabel} → ${nextLabel}`;
+  const since     = new Date(Date.now() - 5000).toISOString();
+  const { data: autoEntry } = await sb.from('ticket_history')
+    .select('id').eq('ticket_id', rdTicket.id).eq('action', 'status_changed')
+    .is('note', null).gte('created_at', since)
+    .order('created_at', { ascending: false }).limit(1);
+  if (autoEntry && autoEntry.length) {
+    await sb.from('ticket_history')
+      .update({ note: histNote, changed_by: currentUser?.id || null })
+      .eq('id', autoEntry[0].id);
+  } else {
+    await sb.from('ticket_history').insert({
+      ticket_id: rdTicket.id, action: 'status_changed',
+      note: histNote, changed_by: currentUser?.id || null
+    });
   }
   // allMgTickets 동기화 (요청 관리 탭과 공유하는 배열)
   const mgIdx = allMgTickets.findIndex(t => t.id === rdTicket.id);
@@ -4321,9 +4314,24 @@ async function saveRequestDetail() {
   const sb2 = document.getElementById('rd-status-badge');
   sb2.textContent = statL; sb2.className = 'badge ' + statB2;
   renderRdList(); // 좌측 목록 배지 즉시 갱신
-  showToast('✅ 저장됐습니다.');
+  showToast('✅ 상태가 변경됐습니다.');
   _savingDetail = false;
   loadRdHistory();
+}
+
+async function saveRdDueDate() {
+  if (!rdTicket || !sb || _savingDetail) return;
+  _savingDetail = true;
+  const dueDate = document.getElementById('rd-due-date')?.value || null;
+  rdTicket.due_date = dueDate;
+  const { error } = await sb.from('tickets').update({ due_date: dueDate }).eq('id', rdTicket.id);
+  if (error) { _savingDetail = false; showToast('저장 실패: ' + error.message, true); return; }
+  const dueDateDisplay = document.getElementById('rd-due-date-display');
+  if (dueDateDisplay) dueDateDisplay.textContent = dueDate ? dueDate : '—';
+  const mgIdx = allMgTickets.findIndex(t => t.id === rdTicket.id);
+  if (mgIdx !== -1) allMgTickets[mgIdx].due_date = dueDate;
+  showToast('✅ 완료예정일이 변경됐습니다.');
+  _savingDetail = false;
 }
 
 let _savingAssignee = false;
