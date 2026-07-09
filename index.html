@@ -1695,18 +1695,24 @@ textarea{resize:vertical;min-height:100px;}
           <label>제목 <span class="req">*</span></label>
           <input type="text" id="doc-title" placeholder="자료 제목">
         </div>
-        <div class="form-group" style="grid-column:1/-1;">
+        <div class="form-group">
+          <label>유형 <span class="req">*</span></label>
+          <select id="d-type" onchange="onDocTypeChange()">
+            <option value="">자료</option>
+            <option value="faq">FAQ</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label>카테고리 <span class="req">*</span></label>
           <select id="d-category">
             <option value="tableau">Tableau</option>
             <option value="tableau-server">Tableau Server</option>
             <option value="tableau-cloud">Tableau Cloud</option>
             <option value="edu">교육</option>
-            <option value="faq">FAQ</option>
           </select>
         </div>
         <div class="form-group" style="grid-column:1/-1;">
-          <label>설명</label>
+          <label id="doc-desc-label">설명</label>
           <textarea id="doc-description" rows="3" style="width:100%;resize:vertical;" placeholder="자료에 대한 간단한 설명"></textarea>
         </div>
         <div class="form-group" style="grid-column:1/-1;">
@@ -1717,7 +1723,7 @@ textarea{resize:vertical;min-height:100px;}
           </label>
         </div>
         <div class="form-group" style="grid-column:1/-1;">
-          <label>파일 <span class="req">*</span></label>
+          <label>파일 <span class="req" id="doc-file-req">*</span></label>
           <div id="d-dropzone" onclick="document.getElementById('d-file-input').click()"
             style="border:2px dashed var(--border-md);border-radius:var(--r-md);padding:24px;text-align:center;cursor:pointer;transition:border-color .15s;background:var(--surface2);"
             ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
@@ -2141,7 +2147,7 @@ async function loadDocuments() {
   const { data, error } = await sb.from('documents').select('*').order('created_at', { ascending: false });
   if (error) { tbody.innerHTML = `<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--danger);">오류: ${error.message}</td></tr>`; return; }
   allDocsAdmin = data || [];
-  const faqCount = allDocsAdmin.filter(d => d.category === 'faq').length;
+  const faqCount = allDocsAdmin.filter(d => d.product === 'faq').length;
   document.getElementById('docs-count').textContent = `자료 ${allDocsAdmin.length - faqCount}개 · FAQ ${faqCount}개`;
   renderDocsFiles();
   renderDocsFaq();
@@ -2186,7 +2192,7 @@ function renderDocsFiles() {
   if (!tbody) return;
   const q = (document.getElementById('docs-search-files')?.value || '').toLowerCase();
   const list = allDocsAdmin.filter(d =>
-    d.category !== 'faq' &&
+    d.product !== 'faq' &&
     (!docsCatFilter || d.category === docsCatFilter) &&
     (!q || (d.title||'').toLowerCase().includes(q))
   );
@@ -2228,7 +2234,7 @@ function renderDocsFaq() {
   if (!tbody) return;
   const q = (document.getElementById('docs-search-faq')?.value || '').toLowerCase();
   const list = allDocsAdmin.filter(d =>
-    d.category === 'faq' &&
+    d.product === 'faq' &&
     (!q || (d.title||'').toLowerCase().includes(q) || (d.description||'').toLowerCase().includes(q))
   );
   if (!list.length) { tbody.innerHTML = '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">등록된 FAQ가 없습니다.</td></tr>'; return; }
@@ -2246,13 +2252,23 @@ function renderDocsFaq() {
     </tr>`).join('');
 }
 
+function onDocTypeChange() {
+  const isFaq = document.getElementById('d-type').value === 'faq';
+  const descLabel = document.getElementById('doc-desc-label');
+  const fileReq = document.getElementById('doc-file-req');
+  if (descLabel) descLabel.textContent = isFaq ? '답변' : '설명';
+  if (fileReq) fileReq.style.display = isFaq ? 'none' : '';
+}
+
 function openEditDoc(d) {
   document.getElementById('modal-doc-title').textContent = '자료 수정';
   document.getElementById('d-id').value = d.id;
   document.getElementById('doc-title').value = d.title || '';
+  document.getElementById('d-type').value = d.product === 'faq' ? 'faq' : '';
   document.getElementById('d-category').value = d.category || 'tableau';
   document.getElementById('doc-description').value = d.description || '';
   document.getElementById('d-filename').value = d.file_name || '';
+  onDocTypeChange();
   // 기존 파일명 드롭존에 표시
   const lbl = document.getElementById('d-dropzone-label');
   if (lbl) lbl.textContent = d.file_name || '클릭하거나 파일을 여기로 드래그하세요';
@@ -2280,12 +2296,13 @@ async function submitDocument() {
 
   const id = document.getElementById('d-id').value;
   const title = document.getElementById('doc-title').value.trim();
+  const type = document.getElementById('d-type').value;
   const category = document.getElementById('d-category').value;
   const file_name = document.getElementById('d-filename').value.trim();
   const existingStoragePath = document.getElementById('d-storage-path').value.trim();
   const existingFileSize = document.getElementById('d-file-size').value;
   if (!title) { showToast('제목을 입력하세요.', true); restoreBtn(); return; }
-  if (category !== 'faq' && !file_name) { showToast('파일을 선택하세요.', true); restoreBtn(); return; }
+  if (type !== 'faq' && !file_name) { showToast('파일을 선택하세요.', true); restoreBtn(); return; }
 
   // 기존 값 유지, 새 파일 선택 시 교체
   let storage_path = existingStoragePath;
@@ -2316,6 +2333,7 @@ async function submitDocument() {
   const payload = {
     title,
     category,
+    product: type || null,
     description: document.getElementById('doc-description').value.trim() || null,
     file_name,
     file_size,
@@ -4829,7 +4847,7 @@ function renderLibFiles() {
   const isAdmin = currentUser && ['tech_support','admin'].includes(currentUser.role);
   const q = (document.getElementById('lib-search')?.value || '').toLowerCase();
   const list = allLibDocs.filter(d => {
-    if (d.category === 'faq') return false;
+    if (d.product === 'faq') return false;
     if (!isAdmin && !d.is_public) return false;
     const matchCat = !libProductFilter || (d.category || '') === libProductFilter;
     const matchQ = !q || (d.title||'').toLowerCase().includes(q) || (d.file_name||'').toLowerCase().includes(q);
@@ -4882,7 +4900,7 @@ function renderLibFaq() {
   const isAdmin = currentUser && ['tech_support','admin'].includes(currentUser.role);
   const q = (document.getElementById('lib-faq-search')?.value || '').toLowerCase();
   const list = allLibDocs.filter(d => {
-    if (d.category !== 'faq') return false;
+    if (d.product !== 'faq') return false;
     if (!isAdmin && !d.is_public) return false;
     return !q || (d.title||'').toLowerCase().includes(q) || (d.description||'').toLowerCase().includes(q);
   });
@@ -4919,9 +4937,11 @@ function openNewDocModal() {
   const isPubChk = document.getElementById('d-is-public');
   if (isPubChk) { isPubChk.checked = true; document.getElementById('d-is-public-label').textContent = '공개 (고객에게 노출됨)'; }
   document.getElementById('doc-title').value = '';
+  document.getElementById('d-type').value = '';
   document.getElementById('d-category').value = 'tableau';
   document.getElementById('doc-description').value = '';
   document.getElementById('d-filename').value = '';
+  onDocTypeChange();
   _docFile = null;
   const lbl = document.getElementById('d-dropzone-label');
   if (lbl) lbl.textContent = '클릭하거나 파일을 여기로 드래그하세요';
@@ -4940,8 +4960,10 @@ function openLibEditDoc(d) {
   document.getElementById('d-storage-path').value = d.storage_path || '';
   document.getElementById('d-file-size').value = d.file_size || '';
   document.getElementById('doc-title').value = d.title || '';
+  document.getElementById('d-type').value = d.product === 'faq' ? 'faq' : '';
   document.getElementById('d-category').value = d.category || 'tableau';
   document.getElementById('doc-description').value = d.description || '';
+  onDocTypeChange();
   const isPubChk = document.getElementById('d-is-public');
   if (isPubChk) { isPubChk.checked = d.is_public !== false; document.getElementById('d-is-public-label').textContent = isPubChk.checked ? '공개 (고객에게 노출됨)' : '비공개 (고객에게 숨김)'; }
   document.getElementById('d-filename').value = d.file_name || '';
