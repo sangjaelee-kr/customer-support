@@ -976,13 +976,43 @@ textarea{resize:vertical;min-height:100px;}
           <div><div class="section-title">자료실 관리</div><div class="section-sub" id="docs-count"></div></div>
           <button class="btn btn-primary btn-sm" onclick="openNewDocModal()">+ 자료 등록</button>
         </div>
-        <div class="card" style="padding:0;overflow:hidden;">
-          <div class="tbl-scroll list-scroll"><table class="tbl">
-            <thead><tr><th>제목</th><th>카테고리</th><th>파일명</th><th>공개</th><th>다운로드</th><th>등록일</th><th>작업</th></tr></thead>
-            <tbody id="docs-tbody">
-              <tr><td colspan="8" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>
-            </tbody>
-          </table></div>
+
+        <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:14px;">
+          <button id="docs-tab-files" onclick="switchDocsTab('files')" style="padding:8px 20px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--accent);border-bottom:2px solid var(--accent);margin-bottom:-2px;">자료</button>
+          <button id="docs-tab-faq"   onclick="switchDocsTab('faq')"   style="padding:8px 20px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;">FAQ</button>
+        </div>
+
+        <div id="docs-panel-files">
+          <div class="filter-bar">
+            <input class="search-box" id="docs-search-files" placeholder="제목 검색..." oninput="renderDocsFiles()">
+            <span class="filter-chip active" onclick="setDocsCategory('',this)">전체</span>
+            <span class="filter-chip" onclick="setDocsCategory('tableau',this)">Tableau</span>
+            <span class="filter-chip" onclick="setDocsCategory('tableau-server',this)">Tableau Server</span>
+            <span class="filter-chip" onclick="setDocsCategory('tableau-cloud',this)">Tableau Cloud</span>
+            <span class="filter-chip" onclick="setDocsCategory('edu',this)">교육</span>
+          </div>
+          <div class="card" style="padding:0;overflow:hidden;">
+            <div class="tbl-scroll list-scroll"><table class="tbl">
+              <thead><tr><th>제목</th><th>카테고리</th><th>파일명</th><th>공개</th><th>다운로드</th><th>등록일</th><th>작업</th></tr></thead>
+              <tbody id="docs-tbody">
+                <tr><td colspan="7" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>
+              </tbody>
+            </table></div>
+          </div>
+        </div>
+
+        <div id="docs-panel-faq" style="display:none;">
+          <div class="filter-bar">
+            <input class="search-box" id="docs-search-faq" placeholder="질문 검색..." oninput="renderDocsFaq()">
+          </div>
+          <div class="card" style="padding:0;overflow:hidden;">
+            <div class="tbl-scroll list-scroll"><table class="tbl">
+              <thead><tr><th>질문</th><th>답변 미리보기</th><th>공개</th><th>등록일</th><th>작업</th></tr></thead>
+              <tbody id="docs-faq-tbody">
+                <tr><td colspan="5" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>
+              </tbody>
+            </table></div>
+          </div>
         </div>
       </div>
 
@@ -2075,34 +2105,93 @@ async function loadIntegrationLogs() {
 // ─── 자료실 관리 ────────────────────────────────────────
 const DOC_CATEGORY_LABEL = { tableau:'Tableau', 'tableau-server':'Tableau Server', 'tableau-cloud':'Tableau Cloud', edu:'교육', faq:'FAQ' };
 
+let allDocsAdmin = [];
+let docsCatFilter = '';
+
 async function loadDocuments() {
   const tbody = document.getElementById('docs-tbody');
-  tbody.innerHTML = '<tr><td colspan="8" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>';
   const { data, error } = await sb.from('documents').select('*').order('created_at', { ascending: false });
-  if (error) { tbody.innerHTML = `<tr><td colspan="8" style="padding:20px;text-align:center;color:var(--danger);">오류: ${error.message}</td></tr>`; return; }
-  document.getElementById('docs-count').textContent = `총 ${data.length}개`;
-  if (!data.length) { tbody.innerHTML = '<tr><td colspan="8" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">등록된 자료가 없습니다.</td></tr>'; return; }
-  tbody.innerHTML = data.map(d => {
-    const fileUrl = d.storage_path
-      ? sb.storage.from('documents').getPublicUrl(d.storage_path.split('/').map(s => encodeURIComponent(decodeURIComponent(s))).join('/')).data?.publicUrl
-      : null;
-    const fileCell = fileUrl
-      ? `<a href="${fileUrl}" target="_blank" style="color:var(--accent);font-size:12px;text-decoration:underline;">${escHtml(d.file_name || d.storage_path)}</a>`
-      : `<span style="font-size:12px;color:var(--faint);">${escHtml(d.file_name || '-')}</span>`;
-    return `
+  if (error) { tbody.innerHTML = `<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--danger);">오류: ${error.message}</td></tr>`; return; }
+  allDocsAdmin = data || [];
+  const faqCount = allDocsAdmin.filter(d => d.category === 'faq').length;
+  document.getElementById('docs-count').textContent = `자료 ${allDocsAdmin.length - faqCount}개 · FAQ ${faqCount}개`;
+  renderDocsFiles();
+  renderDocsFaq();
+}
+
+function switchDocsTab(tab) {
+  const isFiles = tab === 'files';
+  document.getElementById('docs-panel-files').style.display = isFiles ? '' : 'none';
+  document.getElementById('docs-panel-faq').style.display   = isFiles ? 'none' : '';
+  const tFiles = document.getElementById('docs-tab-files');
+  const tFaq   = document.getElementById('docs-tab-faq');
+  const ON  = 'color:var(--accent);border-bottom:2px solid var(--accent);margin-bottom:-2px;';
+  const OFF = 'color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;';
+  tFiles.style.cssText = tFiles.style.cssText.replace(/color:[^;]+;border-bottom:[^;]+;margin-bottom:[^;]+;/, '') + (isFiles ? ON : OFF);
+  tFaq.style.cssText   = tFaq.style.cssText.replace(/color:[^;]+;border-bottom:[^;]+;margin-bottom:[^;]+;/, '')   + (isFiles ? OFF : ON);
+}
+
+function setDocsCategory(cat, el) {
+  docsCatFilter = cat;
+  document.querySelectorAll('#docs-panel-files .filter-chip').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderDocsFiles();
+}
+
+function docRowActions(d) {
+  const fileUrl = d.storage_path
+    ? sb.storage.from('documents').getPublicUrl(d.storage_path.split('/').map(s => encodeURIComponent(decodeURIComponent(s))).join('/')).data?.publicUrl
+    : null;
+  const dlBtn = fileUrl
+    ? `<button class="btn btn-outline btn-sm" onclick="window.open('${fileUrl}','_blank')">⬇ 다운로드</button>`
+    : `<button class="btn btn-outline btn-sm" disabled>⬇ 다운로드</button>`;
+  return `<div style="display:flex;gap:6px;flex-wrap:wrap;">
+    ${dlBtn}
+    <button class="btn btn-ghost btn-sm" onclick='openEditDoc(${JSON.stringify(d).replace(/'/g,"&#39;")})'>수정</button>
+    <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="deleteDocument('${d.id}','${(d.title||'').replace(/'/g,"\\'")}')">삭제</button>
+  </div>`;
+}
+
+function renderDocsFiles() {
+  const tbody = document.getElementById('docs-tbody');
+  if (!tbody) return;
+  const q = (document.getElementById('docs-search-files')?.value || '').toLowerCase();
+  const list = allDocsAdmin.filter(d =>
+    d.category !== 'faq' &&
+    (!docsCatFilter || d.category === docsCatFilter) &&
+    (!q || (d.title||'').toLowerCase().includes(q))
+  );
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">등록된 자료가 없습니다.</td></tr>'; return; }
+  tbody.innerHTML = list.map(d => `
     <tr>
       <td style="font-weight:600;font-size:13px;">${escHtml(d.title)}</td>
       <td><span class="badge b-blue">${DOC_CATEGORY_LABEL[d.category] || d.category}</span></td>
-      <td>${fileCell}</td>
+      <td style="font-size:12px;color:var(--faint);">${escHtml(d.file_name || '-')}</td>
       <td><span class="badge ${d.is_public ? 'b-green' : 'b-gray'}">${d.is_public ? '공개' : '비공개'}</span></td>
       <td style="font-variant-numeric:tabular-nums;text-align:right;">${(d.download_count || 0).toLocaleString()}</td>
       <td style="font-size:12px;color:var(--faint);">${(d.created_at || '').slice(0,10)}</td>
-      <td>
-        <button class="btn btn-ghost btn-sm" onclick='openEditDoc(${JSON.stringify(d).replace(/'/g,"&#39;")})'>수정</button>
-        <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="deleteDocument('${d.id}','${d.title.replace(/'/g,"\\'")}')">삭제</button>
-      </td>
-    </tr>`;
-  }).join('');
+      <td>${docRowActions(d)}</td>
+    </tr>`).join('');
+}
+
+function renderDocsFaq() {
+  const tbody = document.getElementById('docs-faq-tbody');
+  if (!tbody) return;
+  const q = (document.getElementById('docs-search-faq')?.value || '').toLowerCase();
+  const list = allDocsAdmin.filter(d =>
+    d.category === 'faq' &&
+    (!q || (d.title||'').toLowerCase().includes(q) || (d.description||'').toLowerCase().includes(q))
+  );
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">등록된 FAQ가 없습니다.</td></tr>'; return; }
+  tbody.innerHTML = list.map(d => `
+    <tr>
+      <td style="font-weight:600;font-size:13px;">${escHtml(d.title)}</td>
+      <td style="font-size:12px;color:var(--faint);max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml((d.description||'').slice(0,80))}</td>
+      <td><span class="badge ${d.is_public ? 'b-green' : 'b-gray'}">${d.is_public ? '공개' : '비공개'}</span></td>
+      <td style="font-size:12px;color:var(--faint);">${(d.created_at || '').slice(0,10)}</td>
+      <td>${docRowActions(d)}</td>
+    </tr>`).join('');
 }
 
 function openEditDoc(d) {
