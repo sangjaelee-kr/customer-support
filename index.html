@@ -629,7 +629,7 @@ textarea{resize:vertical;min-height:100px;}
       <!-- ══ 자료 다운로드 ══ -->
       <div id="p-downloads" class="page u-page">
       <div class="section-header">
-        <div><div class="section-title" id="lib-page-title">자료실</div></div>
+        <div></div>
         <div style="display:flex;gap:8px;">
           <button class="btn btn-outline btn-sm" id="lib-btn-doc" data-show-roles="tech_support,admin" onclick="openNewDocModal()" style="display:none;">+ 자료 등록</button>
         </div>
@@ -2015,12 +2015,7 @@ function showPage(tabEl, pageId) {
   if (pageId === 'p-customers')   loadCompanies();
   if (pageId === 'p-users')       loadUsers();
   if (pageId === 'p-documents')   loadDocuments();
-  if (pageId === 'p-downloads') {
-    const isAdmin = currentUser && ['tech_support','admin'].includes(currentUser.role);
-    const titleEl = document.getElementById('lib-page-title');
-    if (titleEl) titleEl.textContent = isAdmin ? '자료실 관리' : '자료실';
-    switchLibTab();
-  }
+  if (pageId === 'p-downloads') switchLibTab();
   if (pageId === 'p-integration') loadIntegrationLogs();
   if (pageId === 'p-notify-log')     loadNotifyLog();
   if (pageId === 'p-request-detail') {
