@@ -114,6 +114,9 @@ textarea{resize:vertical;min-height:100px;}
 .tbl td{padding:11px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;white-space:nowrap;}
 .tbl tr:last-child td{border-bottom:none;}
 .tbl tr:hover td{background:var(--surface2);cursor:pointer;}
+.tbl-fit{table-layout:fixed;}
+.tbl-fit td{white-space:normal;overflow:hidden;}
+.tbl-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap !important;}
 
 /* ── stats row ── */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
@@ -648,7 +651,8 @@ textarea{resize:vertical;min-height:100px;}
         <span class="filter-chip" onclick="setLibCategory('edu',this)">교육</span>
       </div>
       <div class="card" style="padding:0;overflow:hidden;">
-        <div class="tbl-scroll list-scroll"><table class="tbl">
+        <div class="tbl-scroll list-scroll"><table class="tbl tbl-fit">
+          <colgroup><col style="width:32%"><col style="width:10%"><col style="width:18%"><col style="width:10%"><col style="width:30%"></colgroup>
           <thead><tr><th>제목</th><th>카테고리</th><th>파일명</th><th>등록일</th><th>액션</th></tr></thead>
           <tbody id="lib-files-tbody">
             <tr><td colspan="5" style="padding:40px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>
@@ -663,7 +667,8 @@ textarea{resize:vertical;min-height:100px;}
         <input class="search-box" id="lib-faq-search" placeholder="질문 검색..." oninput="renderLibFaq()">
       </div>
       <div class="card" style="padding:0;overflow:hidden;">
-        <div class="tbl-scroll list-scroll"><table class="tbl">
+        <div class="tbl-scroll list-scroll"><table class="tbl tbl-fit">
+          <colgroup><col style="width:32%"><col style="width:34%"><col style="width:10%"><col style="width:24%"></colgroup>
           <thead><tr><th>질문</th><th>답변 미리보기</th><th>등록일</th><th>액션</th></tr></thead>
           <tbody id="lib-faq-tbody">
             <tr><td colspan="4" style="padding:40px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>
@@ -1017,7 +1022,8 @@ textarea{resize:vertical;min-height:100px;}
             <span class="filter-chip" onclick="setDocsCategory('edu',this)">교육</span>
           </div>
           <div class="card" style="padding:0;overflow:hidden;">
-            <div class="tbl-scroll list-scroll"><table class="tbl">
+            <div class="tbl-scroll list-scroll"><table class="tbl tbl-fit">
+              <colgroup><col style="width:26%"><col style="width:9%"><col style="width:15%"><col style="width:8%"><col style="width:8%"><col style="width:10%"><col style="width:24%"></colgroup>
               <thead><tr><th>제목</th><th>카테고리</th><th>파일명</th><th>공개</th><th>다운로드</th><th>등록일</th><th>작업</th></tr></thead>
               <tbody id="docs-tbody">
                 <tr><td colspan="7" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>
@@ -1031,7 +1037,8 @@ textarea{resize:vertical;min-height:100px;}
             <input class="search-box" id="docs-search-faq" placeholder="질문 검색..." oninput="renderDocsFaq()">
           </div>
           <div class="card" style="padding:0;overflow:hidden;">
-            <div class="tbl-scroll list-scroll"><table class="tbl">
+            <div class="tbl-scroll list-scroll"><table class="tbl tbl-fit">
+              <colgroup><col style="width:26%"><col style="width:30%"><col style="width:10%"><col style="width:10%"><col style="width:24%"></colgroup>
               <thead><tr><th>질문</th><th>답변 미리보기</th><th>공개</th><th>등록일</th><th>작업</th></tr></thead>
               <tbody id="docs-faq-tbody">
                 <tr><td colspan="5" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>
@@ -2165,16 +2172,17 @@ function setDocsCategory(cat, el) {
 }
 
 function docRowActions(d) {
+  const btnStyle = 'padding:4px 8px;font-size:11px;';
   const fileUrl = d.storage_path
     ? sb.storage.from('documents').getPublicUrl(d.storage_path.split('/').map(s => encodeURIComponent(decodeURIComponent(s))).join('/')).data?.publicUrl
     : null;
   const dlBtn = fileUrl
-    ? `<button class="btn btn-outline btn-sm" onclick="window.open('${fileUrl}','_blank')">⬇ 다운로드</button>`
-    : `<button class="btn btn-outline btn-sm" disabled>⬇ 다운로드</button>`;
-  return `<div style="display:flex;gap:6px;flex-wrap:nowrap;">
+    ? `<button class="btn btn-outline btn-sm" style="${btnStyle}" onclick="window.open('${fileUrl}','_blank')" title="다운로드">⬇</button>`
+    : `<button class="btn btn-outline btn-sm" style="${btnStyle}" disabled title="다운로드">⬇</button>`;
+  return `<div style="display:flex;gap:4px;flex-wrap:nowrap;overflow:hidden;">
     ${dlBtn}
-    <button class="btn btn-ghost btn-sm" onclick='openEditDoc(${JSON.stringify(d).replace(/'/g,"&#39;")})'>수정</button>
-    <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="deleteDocument('${d.id}','${(d.title||'').replace(/'/g,"\\'")}')">삭제</button>
+    <button class="btn btn-ghost btn-sm" style="${btnStyle}" onclick='openEditDoc(${JSON.stringify(d).replace(/'/g,"&#39;")})'>수정</button>
+    <button class="btn btn-ghost btn-sm" style="${btnStyle}color:var(--danger);" onclick="deleteDocument('${d.id}','${(d.title||'').replace(/'/g,"\\'")}')">삭제</button>
   </div>`;
 }
 
@@ -2190,13 +2198,13 @@ function renderDocsFiles() {
   if (!list.length) { tbody.innerHTML = '<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">등록된 자료가 없습니다.</td></tr>'; return; }
   tbody.innerHTML = list.map(d => `
     <tr>
-      <td style="font-weight:600;font-size:13px;">${escHtml(d.title)}</td>
-      <td><span class="badge b-blue">${DOC_CATEGORY_LABEL[d.category] || d.category}</span></td>
-      <td style="font-size:12px;color:var(--faint);">${escHtml(d.file_name || '-')}</td>
-      <td><span class="badge ${d.is_public ? 'b-green' : 'b-gray'}">${d.is_public ? '공개' : '비공개'}</span></td>
-      <td style="font-variant-numeric:tabular-nums;text-align:right;">${(d.download_count || 0).toLocaleString()}</td>
-      <td style="font-size:12px;color:var(--faint);">${(d.created_at || '').slice(0,10)}</td>
-      <td>${docRowActions(d)}</td>
+      <td class="tbl-ellipsis" style="font-weight:600;font-size:13px;">${escHtml(d.title)}</td>
+      <td class="tbl-ellipsis"><span class="badge b-blue">${DOC_CATEGORY_LABEL[d.category] || d.category}</span></td>
+      <td class="tbl-ellipsis" style="font-size:12px;color:var(--faint);">${escHtml(d.file_name || '-')}</td>
+      <td class="tbl-ellipsis"><span class="badge ${d.is_public ? 'b-green' : 'b-gray'}">${d.is_public ? '공개' : '비공개'}</span></td>
+      <td style="font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;">${(d.download_count || 0).toLocaleString()}</td>
+      <td style="font-size:12px;color:var(--faint);white-space:nowrap;">${(d.created_at || '').slice(0,10)}</td>
+      <td style="overflow:hidden;">${docRowActions(d)}</td>
     </tr>`).join('');
 }
 
@@ -2211,11 +2219,11 @@ function renderDocsFaq() {
   if (!list.length) { tbody.innerHTML = '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">등록된 FAQ가 없습니다.</td></tr>'; return; }
   tbody.innerHTML = list.map(d => `
     <tr>
-      <td style="font-weight:600;font-size:13px;">${escHtml(d.title)}</td>
-      <td style="font-size:12px;color:var(--faint);max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml((d.description||'').slice(0,80))}</td>
-      <td><span class="badge ${d.is_public ? 'b-green' : 'b-gray'}">${d.is_public ? '공개' : '비공개'}</span></td>
-      <td style="font-size:12px;color:var(--faint);">${(d.created_at || '').slice(0,10)}</td>
-      <td>${docRowActions(d)}</td>
+      <td class="tbl-ellipsis" style="font-weight:600;font-size:13px;">${escHtml(d.title)}</td>
+      <td class="tbl-ellipsis" style="font-size:12px;color:var(--faint);">${escHtml((d.description||'').slice(0,80))}</td>
+      <td class="tbl-ellipsis"><span class="badge ${d.is_public ? 'b-green' : 'b-gray'}">${d.is_public ? '공개' : '비공개'}</span></td>
+      <td style="font-size:12px;color:var(--faint);white-space:nowrap;">${(d.created_at || '').slice(0,10)}</td>
+      <td style="overflow:hidden;">${docRowActions(d)}</td>
     </tr>`).join('');
 }
 
@@ -4783,15 +4791,16 @@ function setLibCategory(cat, el) {
 }
 
 function libRowActions(d, isAdmin, isPublic, fileUrl) {
+  const btnStyle = 'padding:4px 8px;font-size:11px;';
   const downloadBtn = (!isAdmin && !isPublic) ? '' : fileUrl
-    ? `<button class="btn btn-outline btn-sm" onclick="downloadDoc('${fileUrl}','${escHtml(d.file_name || d.title)}','${d.id}')">⬇ 다운로드</button>`
-    : `<button class="btn btn-outline btn-sm" disabled>⬇ 다운로드</button>`;
+    ? `<button class="btn btn-outline btn-sm" style="${btnStyle}" onclick="downloadDoc('${fileUrl}','${escHtml(d.file_name || d.title)}','${d.id}')" title="다운로드">⬇</button>`
+    : `<button class="btn btn-outline btn-sm" style="${btnStyle}" disabled title="다운로드">⬇</button>`;
   const dJson = escHtml(JSON.stringify(d).replace(/'/g,"&#39;"));
   const adminBtns = isAdmin ? `
-    <button class="btn btn-ghost btn-sm" style="color:${isPublic?'var(--faint)':'var(--accent)'};" onclick="toggleDocPublic('${d.id}',${isPublic})" title="${isPublic?'비공개로 전환':'공개로 전환'}">${isPublic?'비공개':'공개'}</button>
-    <button class="btn btn-ghost btn-sm" onclick='openLibEditDoc(${dJson})'>수정</button>
-    <button class="btn btn-ghost btn-sm" style="color:#e53e3e;" onclick="deleteDoc('${d.id}','${escHtml(d.storage_path||'')}','${escHtml(d.title||'')}')">삭제</button>` : '';
-  return `<div style="display:flex;gap:6px;flex-wrap:nowrap;">${downloadBtn}${adminBtns}</div>`;
+    <button class="btn btn-ghost btn-sm" style="${btnStyle}color:${isPublic?'var(--faint)':'var(--accent)'};" onclick="toggleDocPublic('${d.id}',${isPublic})" title="${isPublic?'비공개로 전환':'공개로 전환'}">${isPublic?'비공개':'공개'}</button>
+    <button class="btn btn-ghost btn-sm" style="${btnStyle}" onclick='openLibEditDoc(${dJson})'>수정</button>
+    <button class="btn btn-ghost btn-sm" style="${btnStyle}color:#e53e3e;" onclick="deleteDoc('${d.id}','${escHtml(d.storage_path||'')}','${escHtml(d.title||'')}')">삭제</button>` : '';
+  return `<div style="display:flex;gap:4px;flex-wrap:nowrap;overflow:hidden;">${downloadBtn}${adminBtns}</div>`;
 }
 
 function renderLibFiles() {
@@ -4823,14 +4832,14 @@ function renderLibFiles() {
     const privateBadge = isAdmin && !isPublic ? '<span class="badge b-red" style="font-size:10px;margin-left:6px;">비공개</span>' : '';
     const newBadge = isNew ? '<span class="badge b-accent" style="font-size:10px;margin-left:6px;">NEW</span>' : '';
     return `<tr${isAdmin && !isPublic ? ' style="background:rgba(220,38,38,.05);"' : ''}>
-      <td>
-        <div style="font-weight:600;">${DOC_CAT_ICON[d.category] || '📁'} ${escHtml(d.title)}${privateBadge}${newBadge}</div>
-        ${d.description ? `<div style="font-size:11px;color:var(--faint);margin-top:2px;">${escHtml(d.description)}</div>` : ''}
+      <td style="overflow:hidden;">
+        <div class="tbl-ellipsis" style="font-weight:600;">${DOC_CAT_ICON[d.category] || '📁'} ${escHtml(d.title)}${privateBadge}${newBadge}</div>
+        ${d.description ? `<div class="tbl-ellipsis" style="font-size:11px;color:var(--faint);margin-top:2px;">${escHtml(d.description)}</div>` : ''}
       </td>
-      <td style="white-space:nowrap;">${DOC_CAT_LABEL_KO[d.category] || d.category || '-'}</td>
-      <td style="font-size:12px;color:var(--faint);white-space:nowrap;">${(isAdmin || isPublic) ? escHtml(d.file_name || '-') : '—'}</td>
+      <td class="tbl-ellipsis">${DOC_CAT_LABEL_KO[d.category] || d.category || '-'}</td>
+      <td class="tbl-ellipsis" style="font-size:12px;color:var(--faint);">${(isAdmin || isPublic) ? escHtml(d.file_name || '-') : '—'}</td>
       <td style="white-space:nowrap;color:var(--faint);">${(d.created_at || '').slice(0,10)}</td>
-      <td>${libRowActions(d, isAdmin, isPublic, fileUrl)}</td>
+      <td style="overflow:hidden;">${libRowActions(d, isAdmin, isPublic, fileUrl)}</td>
     </tr>`;
   }).join('');
 }
@@ -4858,10 +4867,10 @@ function renderLibFaq() {
       : null;
     const privateBadge = isAdmin && !isPublic ? '<span class="badge b-red" style="font-size:10px;margin-left:6px;">비공개</span>' : '';
     return `<tr${isAdmin && !isPublic ? ' style="background:rgba(220,38,38,.05);"' : ''}>
-      <td style="font-weight:600;">Q. ${escHtml(d.title)}${privateBadge}</td>
-      <td style="font-size:12px;color:var(--faint);max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml((d.description||'').slice(0,80))}</td>
+      <td class="tbl-ellipsis" style="font-weight:600;">Q. ${escHtml(d.title)}${privateBadge}</td>
+      <td class="tbl-ellipsis" style="font-size:12px;color:var(--faint);">${escHtml((d.description||'').slice(0,80))}</td>
       <td style="white-space:nowrap;color:var(--faint);">${(d.created_at || '').slice(0,10)}</td>
-      <td>${libRowActions(d, isAdmin, isPublic, fileUrl)}</td>
+      <td style="overflow:hidden;">${libRowActions(d, isAdmin, isPublic, fileUrl)}</td>
     </tr>`;
   }).join('');
 }
