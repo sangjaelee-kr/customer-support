@@ -2177,8 +2177,8 @@ function docRowActions(d) {
     ? sb.storage.from('documents').getPublicUrl(d.storage_path.split('/').map(s => encodeURIComponent(decodeURIComponent(s))).join('/')).data?.publicUrl
     : null;
   const dlBtn = fileUrl
-    ? `<button class="btn btn-outline btn-sm" style="${btnStyle}" onclick="window.open('${fileUrl}','_blank')" title="다운로드">⬇</button>`
-    : `<button class="btn btn-outline btn-sm" style="${btnStyle}" disabled title="다운로드">⬇</button>`;
+    ? `<button class="btn btn-outline btn-sm" style="${btnStyle}" onclick="window.open('${fileUrl}','_blank')">⬇ 다운로드</button>`
+    : `<button class="btn btn-outline btn-sm" style="${btnStyle}" disabled>⬇ 다운로드</button>`;
   return `<div style="display:flex;gap:4px;flex-wrap:nowrap;overflow:hidden;">
     ${dlBtn}
     <button class="btn btn-ghost btn-sm" style="${btnStyle}" onclick='openEditDoc(${JSON.stringify(d).replace(/'/g,"&#39;")})'>수정</button>
@@ -4793,8 +4793,8 @@ function setLibCategory(cat, el) {
 function libRowActions(d, isAdmin, isPublic, fileUrl) {
   const btnStyle = 'padding:4px 8px;font-size:11px;';
   const downloadBtn = (!isAdmin && !isPublic) ? '' : fileUrl
-    ? `<button class="btn btn-outline btn-sm" style="${btnStyle}" onclick="downloadDoc('${fileUrl}','${escHtml(d.file_name || d.title)}','${d.id}')" title="다운로드">⬇</button>`
-    : `<button class="btn btn-outline btn-sm" style="${btnStyle}" disabled title="다운로드">⬇</button>`;
+    ? `<button class="btn btn-outline btn-sm" style="${btnStyle}" onclick="downloadDoc('${fileUrl}','${escHtml(d.file_name || d.title)}','${d.id}')">⬇ 다운로드</button>`
+    : `<button class="btn btn-outline btn-sm" style="${btnStyle}" disabled>⬇ 다운로드</button>`;
   const dJson = escHtml(JSON.stringify(d).replace(/'/g,"&#39;"));
   const adminBtns = isAdmin ? `
     <button class="btn btn-ghost btn-sm" style="${btnStyle}color:${isPublic?'var(--faint)':'var(--accent)'};" onclick="toggleDocPublic('${d.id}',${isPublic})" title="${isPublic?'비공개로 전환':'공개로 전환'}">${isPublic?'비공개':'공개'}</button>
