@@ -666,6 +666,11 @@ textarea{resize:vertical;min-height:100px;}
       <div id="lib-panel-faq" style="display:none;">
       <div class="filter-bar">
         <input class="search-box" id="lib-faq-search" placeholder="질문 검색..." oninput="renderLibFaq()">
+        <span class="filter-chip active" onclick="setLibFaqCategory('',this)">전체</span>
+        <span class="filter-chip" onclick="setLibFaqCategory('tableau',this)">Tableau</span>
+        <span class="filter-chip" onclick="setLibFaqCategory('tableau-server',this)">Tableau Server</span>
+        <span class="filter-chip" onclick="setLibFaqCategory('tableau-cloud',this)">Tableau Cloud</span>
+        <span class="filter-chip" onclick="setLibFaqCategory('edu',this)">교육</span>
       </div>
       <div class="card" style="padding:0;overflow:hidden;">
         <div class="tbl-scroll list-scroll"><table class="tbl tbl-fit">
@@ -1039,6 +1044,11 @@ textarea{resize:vertical;min-height:100px;}
         <div id="docs-panel-faq" style="display:none;">
           <div class="filter-bar">
             <input class="search-box" id="docs-search-faq" placeholder="질문 검색..." oninput="renderDocsFaq()">
+            <span class="filter-chip active" onclick="setDocsFaqCategory('',this)">전체</span>
+            <span class="filter-chip" onclick="setDocsFaqCategory('tableau',this)">Tableau</span>
+            <span class="filter-chip" onclick="setDocsFaqCategory('tableau-server',this)">Tableau Server</span>
+            <span class="filter-chip" onclick="setDocsFaqCategory('tableau-cloud',this)">Tableau Cloud</span>
+            <span class="filter-chip" onclick="setDocsFaqCategory('edu',this)">교육</span>
           </div>
           <div class="card" style="padding:0;overflow:hidden;">
             <div class="tbl-scroll list-scroll"><table class="tbl tbl-fit">
@@ -2144,6 +2154,7 @@ const DOC_CATEGORY_LABEL = { tableau:'Tableau', 'tableau-server':'Tableau Server
 
 let allDocsAdmin = [];
 let docsCatFilter = '';
+let docsFaqCatFilter = '';
 
 async function loadDocuments() {
   const tbody = document.getElementById('docs-tbody');
@@ -2178,6 +2189,13 @@ function setDocsCategory(cat, el) {
   document.querySelectorAll('#docs-panel-files .filter-chip').forEach(c => c.classList.remove('active'));
   if (el) el.classList.add('active');
   renderDocsFiles();
+}
+
+function setDocsFaqCategory(cat, el) {
+  docsFaqCatFilter = cat;
+  document.querySelectorAll('#docs-panel-faq .filter-chip').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderDocsFaq();
 }
 
 function docRowActions(d) {
@@ -2243,6 +2261,7 @@ function renderDocsFaq() {
   const q = (document.getElementById('docs-search-faq')?.value || '').toLowerCase();
   const list = allDocsAdmin.filter(d =>
     d.product === 'faq' &&
+    (!docsFaqCatFilter || d.category === docsFaqCatFilter) &&
     (!q || (d.title||'').toLowerCase().includes(q) || (d.description||'').toLowerCase().includes(q))
   );
   if (!list.length) { tbody.innerHTML = '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">등록된 FAQ가 없습니다.</td></tr>'; return; }
@@ -4795,6 +4814,7 @@ function switchLibTab() {
 // ── 자료실 (고객용) DB 연동 ─────────────────────────────────────
 let allLibDocs = [];
 let libProductFilter = '';
+let libFaqCatFilter = '';
 
 const DOC_CAT_ICON = { tableau:'📊', 'tableau-server':'🖥️', 'tableau-cloud':'☁️', edu:'🎓', faq:'❓' };
 const DOC_CAT_LABEL_KO = { tableau:'Tableau', 'tableau-server':'Tableau Server', 'tableau-cloud':'Tableau Cloud', edu:'교육', faq:'FAQ' };
@@ -4837,6 +4857,13 @@ function setLibCategory(cat, el) {
   document.querySelectorAll('#lib-panel-files .filter-chip').forEach(c => c.classList.remove('active'));
   if (el) el.classList.add('active');
   renderLibFiles();
+}
+
+function setLibFaqCategory(cat, el) {
+  libFaqCatFilter = cat;
+  document.querySelectorAll('#lib-panel-faq .filter-chip').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderLibFaq();
 }
 
 function libRowActions(d, isAdmin, isPublic, fileUrl) {
@@ -4913,6 +4940,7 @@ function renderLibFaq() {
   const list = allLibDocs.filter(d => {
     if (d.product !== 'faq') return false;
     if (!isAdmin && !d.is_public) return false;
+    if (libFaqCatFilter && d.category !== libFaqCatFilter) return false;
     return !q || (d.title||'').toLowerCase().includes(q) || (d.description||'').toLowerCase().includes(q);
   });
 
