@@ -631,6 +631,12 @@ textarea{resize:vertical;min-height:100px;}
           <button class="btn btn-outline btn-sm" id="lib-btn-doc" data-show-roles="tech_support,admin" onclick="openNewDocModal()" style="display:none;">+ 자료 등록</button>
         </div>
       </div>
+
+      <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:14px;">
+        <button id="lib-tab-files" onclick="switchLibDisplayTab('files')" style="padding:8px 20px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--accent);border-bottom:2px solid var(--accent);margin-bottom:-2px;">자료 다운로드</button>
+        <button id="lib-tab-faq"   onclick="switchLibDisplayTab('faq')"   style="padding:8px 20px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;">FAQ</button>
+      </div>
+
       <!-- 자료 다운로드 패널 -->
       <div id="lib-panel-files">
       <div class="filter-bar">
@@ -640,12 +646,31 @@ textarea{resize:vertical;min-height:100px;}
         <span class="filter-chip" onclick="setLibCategory('tableau-server',this)">Tableau Server</span>
         <span class="filter-chip" onclick="setLibCategory('tableau-cloud',this)">Tableau Cloud</span>
         <span class="filter-chip" onclick="setLibCategory('edu',this)">교육</span>
-        <span class="filter-chip" onclick="setLibCategory('faq',this)">FAQ</span>
       </div>
-      <div id="lib-files-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;">
-        <div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="tbl-scroll list-scroll"><table class="tbl">
+          <thead><tr><th>제목</th><th>카테고리</th><th>파일명</th><th>등록일</th><th>액션</th></tr></thead>
+          <tbody id="lib-files-tbody">
+            <tr><td colspan="5" style="padding:40px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>
+          </tbody>
+        </table></div>
       </div>
       </div><!-- /lib-panel-files -->
+
+      <!-- FAQ 패널 -->
+      <div id="lib-panel-faq" style="display:none;">
+      <div class="filter-bar">
+        <input class="search-box" id="lib-faq-search" placeholder="질문 검색..." oninput="renderLibFaq()">
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="tbl-scroll list-scroll"><table class="tbl">
+          <thead><tr><th>질문</th><th>답변 미리보기</th><th>등록일</th><th>액션</th></tr></thead>
+          <tbody id="lib-faq-tbody">
+            <tr><td colspan="4" style="padding:40px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      </div><!-- /lib-panel-faq -->
     </div><!-- /p-downloads -->
 
       <!-- ══ 마이페이지 ══ -->
@@ -4723,96 +4748,121 @@ const DOC_CAT_ICON = { tableau:'📊', 'tableau-server':'🖥️', 'tableau-clou
 const DOC_CAT_LABEL_KO = { tableau:'Tableau', 'tableau-server':'Tableau Server', 'tableau-cloud':'Tableau Cloud', edu:'교육', faq:'FAQ' };
 
 async function loadLibFiles() {
-  const grid = document.getElementById('lib-files-grid');
-  if (!grid) return;
-  if (!sb) { grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--faint);font-size:13px;">DB 연결 없음</div>'; return; }
-  grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</div>';
+  const tbody = document.getElementById('lib-files-tbody');
+  if (!tbody) return;
+  if (!sb) { tbody.innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--faint);font-size:13px;">DB 연결 없음</td></tr>'; return; }
+  tbody.innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>';
 
   const { data, error } = await sb.from('documents')
     .select('id, title, category, product, description, file_name, file_size, storage_path, is_public, created_at, updated_at, download_count')
     .order('created_at', { ascending: false });
 
-  if (error) { grid.innerHTML = `<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--red);">오류: ${escHtml(error.message)}</div>`; return; }
+  if (error) { tbody.innerHTML = `<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--red);">오류: ${escHtml(error.message)}</td></tr>`; return; }
   allLibDocs = data || [];
   renderLibFiles();
+  renderLibFaq();
 }
 
-function setLibCategory(product, el) {
-  libProductFilter = product;
+function switchLibDisplayTab(tab) {
+  const isFiles = tab === 'files';
+  document.getElementById('lib-panel-files').style.display = isFiles ? '' : 'none';
+  document.getElementById('lib-panel-faq').style.display   = isFiles ? 'none' : '';
+  const tFiles = document.getElementById('lib-tab-files');
+  const tFaq   = document.getElementById('lib-tab-faq');
+  const ON  = 'color:var(--accent);border-bottom:2px solid var(--accent);margin-bottom:-2px;';
+  const OFF = 'color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;';
+  tFiles.style.cssText = tFiles.style.cssText.replace(/color:[^;]+;border-bottom:[^;]+;margin-bottom:[^;]+;/, '') + (isFiles ? ON : OFF);
+  tFaq.style.cssText   = tFaq.style.cssText.replace(/color:[^;]+;border-bottom:[^;]+;margin-bottom:[^;]+;/, '')   + (isFiles ? OFF : ON);
+}
+
+function setLibCategory(cat, el) {
+  libProductFilter = cat;
   document.querySelectorAll('#lib-panel-files .filter-chip').forEach(c => c.classList.remove('active'));
   if (el) el.classList.add('active');
   renderLibFiles();
 }
 
+function libRowActions(d, isAdmin, isPublic, fileUrl) {
+  const downloadBtn = (!isAdmin && !isPublic) ? '' : fileUrl
+    ? `<button class="btn btn-outline btn-sm" onclick="downloadDoc('${fileUrl}','${escHtml(d.file_name || d.title)}','${d.id}')">⬇ 다운로드</button>`
+    : `<button class="btn btn-outline btn-sm" disabled>⬇ 다운로드</button>`;
+  const dJson = escHtml(JSON.stringify(d).replace(/'/g,"&#39;"));
+  const adminBtns = isAdmin ? `
+    <button class="btn btn-ghost btn-sm" style="color:${isPublic?'var(--faint)':'var(--accent)'};" onclick="toggleDocPublic('${d.id}',${isPublic})" title="${isPublic?'비공개로 전환':'공개로 전환'}">${isPublic?'비공개':'공개'}</button>
+    <button class="btn btn-ghost btn-sm" onclick='openLibEditDoc(${dJson})'>수정</button>
+    <button class="btn btn-ghost btn-sm" style="color:#e53e3e;" onclick="deleteDoc('${d.id}','${escHtml(d.storage_path||'')}','${escHtml(d.title||'')}')">삭제</button>` : '';
+  return `<div style="display:flex;gap:6px;flex-wrap:wrap;">${downloadBtn}${adminBtns}</div>`;
+}
+
 function renderLibFiles() {
-  const grid = document.getElementById('lib-files-grid');
-  if (!grid) return;
+  const tbody = document.getElementById('lib-files-tbody');
+  if (!tbody) return;
   const isAdmin = currentUser && ['tech_support','admin'].includes(currentUser.role);
   const q = (document.getElementById('lib-search')?.value || '').toLowerCase();
   const list = allLibDocs.filter(d => {
+    if (d.category === 'faq') return false;
     if (!isAdmin && !d.is_public) return false;
-    const matchProd = !libProductFilter || (d.category || '') === libProductFilter;
+    const matchCat = !libProductFilter || (d.category || '') === libProductFilter;
     const matchQ = !q || (d.title||'').toLowerCase().includes(q) || (d.file_name||'').toLowerCase().includes(q);
-    return matchProd && matchQ;
+    return matchCat && matchQ;
   });
 
   if (!list.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--faint);font-size:13px;">등록된 자료가 없습니다.</div>';
+    tbody.innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--faint);font-size:13px;">등록된 자료가 없습니다.</td></tr>';
     return;
   }
 
-  const groups = {};
-  list.forEach(d => {
-    const cat = d.category || 'other';
-    if (!groups[cat]) groups[cat] = [];
-    groups[cat].push(d);
-  });
-
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000);
 
-  grid.innerHTML = Object.entries(groups).map(([cat, docs]) => {
-    const icon  = DOC_CAT_ICON[cat]    || '📁';
-    const label = DOC_CAT_LABEL_KO[cat] || cat;
-    const items = docs.map(d => {
-      const ext = d.file_name ? d.file_name.split('.').pop().toUpperCase() : '—';
-      const sizeMB = d.file_size ? (d.file_size / 1024 / 1024).toFixed(1) + 'MB' : '';
-      const date = (d.created_at || '').slice(0, 10);
-      const isNew = d.created_at && new Date(d.created_at) > thirtyDaysAgo;
-      const fileUrl = d.storage_path && sb
-        ? sb.storage.from('documents').getPublicUrl(d.storage_path.split('/').map(s => encodeURIComponent(decodeURIComponent(s))).join('/')).data?.publicUrl
-        : null;
-      const dJson = escHtml(JSON.stringify(d).replace(/'/g,"&#39;"));
-      const isPublic = d.is_public !== false;
-      const adminBtns = isAdmin ? `
-        <button class="btn btn-ghost btn-sm" style="flex-shrink:0;color:${isPublic?'var(--faint)':'var(--accent)'};" onclick="toggleDocPublic('${d.id}',${isPublic})" title="${isPublic?'비공개로 전환':'공개로 전환'}">${isPublic?'비공개':'공개'}</button>
-        <button class="btn btn-ghost btn-sm" style="flex-shrink:0;" onclick='openLibEditDoc(${dJson})'>수정</button>
-        <button class="btn btn-ghost btn-sm" style="flex-shrink:0;color:#e53e3e;" onclick="deleteDoc('${d.id}','${escHtml(d.storage_path||'')}','${escHtml(d.title||'')}')">삭제</button>` : '';
-      const privateBadge = isAdmin && !isPublic ? '<span style="font-size:10px;background:#fed7d7;color:#c53030;padding:1px 6px;border-radius:4px;margin-left:6px;">비공개</span>' : '';
-      const downloadBtn = !isAdmin && !isPublic ? '' : fileUrl
-        ? `<button class="btn btn-outline" style="flex-shrink:0;font-size:11px;padding:2px 8px;height:22px;line-height:1;" onclick="downloadDoc('${fileUrl}','${escHtml(d.file_name || d.title)}','${d.id}')">⬇ 다운로드</button>`
-        : `<button class="btn btn-outline" style="flex-shrink:0;font-size:11px;padding:2px 8px;height:22px;line-height:1;" disabled>⬇ 다운로드</button>`;
-      return `<div style="padding:10px 12px;background:${!isPublic&&isAdmin?'rgba(254,215,215,0.2)':'var(--surface2)'};border-radius:var(--r-md);${!isPublic&&isAdmin?'border:1px dashed #fc8181;':''}">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(d.title)}${privateBadge}</div>
-            ${d.description ? `<div style="font-size:12px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(d.description)}</div>` : ''}
-            ${(isAdmin || isPublic) && d.file_name ? `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;min-width:0;">
-              <span style="font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📎 ${escHtml(d.file_name)}</span>
-              ${downloadBtn}
-            </div>` : ''}
-            <div style="font-size:11px;color:var(--faint);margin-top:2px;">
-              ${(isAdmin || isPublic) ? (ext + (sizeMB ? ' · ' + sizeMB : '') + ' · ') : ''}${date}
-              ${isNew ? '<span class="badge b-accent" style="font-size:10px;margin-left:4px;">NEW</span>' : ''}
-            </div>
-          </div>
-          ${isAdmin ? `<div style="display:flex;gap:4px;flex-shrink:0;margin-top:2px;">${adminBtns}</div>` : ''}
-        </div>
-      </div>`;
-    }).join('');
-    return `<div class="card" style="margin-bottom:0;">
-      <div class="card-title" style="margin-bottom:12px;">${icon} ${escHtml(label)}</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">${items}</div>
-    </div>`;
+  tbody.innerHTML = list.map(d => {
+    const isPublic = d.is_public !== false;
+    const fileUrl = d.storage_path && sb
+      ? sb.storage.from('documents').getPublicUrl(d.storage_path.split('/').map(s => encodeURIComponent(decodeURIComponent(s))).join('/')).data?.publicUrl
+      : null;
+    const isNew = d.created_at && new Date(d.created_at) > thirtyDaysAgo;
+    const privateBadge = isAdmin && !isPublic ? '<span class="badge b-red" style="font-size:10px;margin-left:6px;">비공개</span>' : '';
+    const newBadge = isNew ? '<span class="badge b-accent" style="font-size:10px;margin-left:6px;">NEW</span>' : '';
+    return `<tr${isAdmin && !isPublic ? ' style="background:rgba(220,38,38,.05);"' : ''}>
+      <td>
+        <div style="font-weight:600;">${DOC_CAT_ICON[d.category] || '📁'} ${escHtml(d.title)}${privateBadge}${newBadge}</div>
+        ${d.description ? `<div style="font-size:11px;color:var(--faint);margin-top:2px;">${escHtml(d.description)}</div>` : ''}
+      </td>
+      <td style="white-space:nowrap;">${DOC_CAT_LABEL_KO[d.category] || d.category || '-'}</td>
+      <td style="font-size:12px;color:var(--faint);white-space:nowrap;">${(isAdmin || isPublic) ? escHtml(d.file_name || '-') : '—'}</td>
+      <td style="white-space:nowrap;color:var(--faint);">${(d.created_at || '').slice(0,10)}</td>
+      <td>${libRowActions(d, isAdmin, isPublic, fileUrl)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderLibFaq() {
+  const tbody = document.getElementById('lib-faq-tbody');
+  if (!tbody) return;
+  const isAdmin = currentUser && ['tech_support','admin'].includes(currentUser.role);
+  const q = (document.getElementById('lib-faq-search')?.value || '').toLowerCase();
+  const list = allLibDocs.filter(d => {
+    if (d.category !== 'faq') return false;
+    if (!isAdmin && !d.is_public) return false;
+    return !q || (d.title||'').toLowerCase().includes(q) || (d.description||'').toLowerCase().includes(q);
+  });
+
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:40px;text-align:center;color:var(--faint);font-size:13px;">등록된 FAQ가 없습니다.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = list.map(d => {
+    const isPublic = d.is_public !== false;
+    const fileUrl = d.storage_path && sb
+      ? sb.storage.from('documents').getPublicUrl(d.storage_path.split('/').map(s => encodeURIComponent(decodeURIComponent(s))).join('/')).data?.publicUrl
+      : null;
+    const privateBadge = isAdmin && !isPublic ? '<span class="badge b-red" style="font-size:10px;margin-left:6px;">비공개</span>' : '';
+    return `<tr${isAdmin && !isPublic ? ' style="background:rgba(220,38,38,.05);"' : ''}>
+      <td style="font-weight:600;">Q. ${escHtml(d.title)}${privateBadge}</td>
+      <td style="font-size:12px;color:var(--faint);max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml((d.description||'').slice(0,80))}</td>
+      <td style="white-space:nowrap;color:var(--faint);">${(d.created_at || '').slice(0,10)}</td>
+      <td>${libRowActions(d, isAdmin, isPublic, fileUrl)}</td>
+    </tr>`;
   }).join('');
 }
 
