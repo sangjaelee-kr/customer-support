@@ -2171,7 +2171,7 @@ function docRowActions(d) {
   const dlBtn = fileUrl
     ? `<button class="btn btn-outline btn-sm" onclick="window.open('${fileUrl}','_blank')">⬇ 다운로드</button>`
     : `<button class="btn btn-outline btn-sm" disabled>⬇ 다운로드</button>`;
-  return `<div style="display:flex;gap:6px;flex-wrap:wrap;">
+  return `<div style="display:flex;gap:6px;flex-wrap:nowrap;">
     ${dlBtn}
     <button class="btn btn-ghost btn-sm" onclick='openEditDoc(${JSON.stringify(d).replace(/'/g,"&#39;")})'>수정</button>
     <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="deleteDocument('${d.id}','${(d.title||'').replace(/'/g,"\\'")}')">삭제</button>
@@ -4791,7 +4791,7 @@ function libRowActions(d, isAdmin, isPublic, fileUrl) {
     <button class="btn btn-ghost btn-sm" style="color:${isPublic?'var(--faint)':'var(--accent)'};" onclick="toggleDocPublic('${d.id}',${isPublic})" title="${isPublic?'비공개로 전환':'공개로 전환'}">${isPublic?'비공개':'공개'}</button>
     <button class="btn btn-ghost btn-sm" onclick='openLibEditDoc(${dJson})'>수정</button>
     <button class="btn btn-ghost btn-sm" style="color:#e53e3e;" onclick="deleteDoc('${d.id}','${escHtml(d.storage_path||'')}','${escHtml(d.title||'')}')">삭제</button>` : '';
-  return `<div style="display:flex;gap:6px;flex-wrap:wrap;">${downloadBtn}${adminBtns}</div>`;
+  return `<div style="display:flex;gap:6px;flex-wrap:nowrap;">${downloadBtn}${adminBtns}</div>`;
 }
 
 function renderLibFiles() {
