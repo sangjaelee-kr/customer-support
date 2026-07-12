@@ -3049,6 +3049,16 @@ function applyTicketFilter() {
   renderTickets(filtered);
 }
 
+// 펼친 요청 행이 스크롤 영역 맨 위(고정 헤더 바로 아래)에 오도록 스크롤 위치 보정
+function pinRowToTop(tr) {
+  const container = tr.closest('.list-scroll');
+  if (!container) return;
+  const headerEl = container.querySelector('thead');
+  const headerHeight = headerEl ? headerEl.getBoundingClientRect().height : 0;
+  const delta = tr.getBoundingClientRect().top - container.getBoundingClientRect().top - headerHeight;
+  container.scrollTop += delta;
+}
+
 // 요청 아코디언에 열려 있던 공용 상세 패널(rd-detail-content)이 tbody를 통째로 갈아끼울 때
 // (innerHTML 재할당) 함께 파괴되지 않도록, 갈아끼우기 전에 안전한 자리로 빼둔다.
 function detachSharedRequestDetail(tbody) {
@@ -3131,6 +3141,7 @@ function toggleTicketRow(tr, ticket) {
     if (td && detailContent) td.appendChild(detailContent);
   }
   selectRdTicket(null, ticket);
+  pinRowToTop(tr);
 }
 
 function openRequestRowById(ticketId) {
@@ -3139,7 +3150,6 @@ function openRequestRowById(ticketId) {
   const idx = allTickets.findIndex(t => t.id === ticketId);
   if (idx === -1) return;
   toggleTicketRow(row, allTickets[idx]);
-  row.scrollIntoView({ block: 'center' });
 }
 
 // ══════════════════════════════════════════
@@ -4474,6 +4484,7 @@ function toggleAllTicketRow(tr, ticket) {
     if (td && detailContent) td.appendChild(detailContent);
   }
   selectRdTicket(null, ticket);
+  pinRowToTop(tr);
 }
 
 // 좌측 리스트 렌더
