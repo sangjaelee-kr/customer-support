@@ -814,7 +814,10 @@ textarea{resize:vertical;min-height:100px;}
                 <button class="th-filter-btn" onclick="toggleArFilterPop(this,'company')">고객사 <span class="th-filter-caret">▾</span></button>
                 <div class="th-filter-pop" id="ar-pop-company"><div class="th-filter-empty">불러오는 중...</div></div>
               </th>
-              <th style="padding:8px 12px;">요청자</th>
+              <th>
+                <button class="th-filter-btn" onclick="toggleArFilterPop(this,'requester')">요청자 <span class="th-filter-caret">▾</span></button>
+                <div class="th-filter-pop" id="ar-pop-requester"><div class="th-filter-empty">불러오는 중...</div></div>
+              </th>
               <th>
                 <button class="th-filter-btn" onclick="toggleArFilterPop(this,'assignee')">담당자 <span class="th-filter-caret">▾</span></button>
                 <div class="th-filter-pop" id="ar-pop-assignee"><div class="th-filter-empty">불러오는 중...</div></div>
@@ -4410,7 +4413,7 @@ let customerRdTickets = [];
 let mgTicket = null;
 
 // ── 요청 관리: 표 헤더 클릭 필터 ──────────────────────────────
-let arFilters = { category: [], priority: [], status: [], company: [], assignee: [] };
+let arFilters = { category: [], priority: [], status: [], company: [], requester: [], assignee: [] };
 
 function closeAllArFilterPops() {
   document.querySelectorAll('.th-filter-pop').forEach(p => p.classList.remove('open'));
@@ -4467,6 +4470,20 @@ function populateArDynamicFilters() {
       `<div class="th-filter-foot">
         <button class="th-filter-clear" onclick="clearArFilter('company')">초기화</button>
         <button class="th-filter-apply" onclick="applyArFilter('company')">적용</button>
+      </div>`;
+  }
+
+  const requesterPop = document.getElementById('ar-pop-requester');
+  if (requesterPop) {
+    const requesters = [...new Set(allMgTickets.map(t => t.requester?.name).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'ko'));
+    const checked = new Set(arFilters.requester);
+    requesterPop.innerHTML = (requesters.length
+      ? requesters.map(r => `<label class="th-filter-opt"><input type="checkbox" value="${escHtml(r)}"${checked.has(r) ? ' checked' : ''}> ${escHtml(r)}</label>`).join('')
+      : '<div class="th-filter-empty">요청자 없음</div>') +
+      `<div class="th-filter-foot">
+        <button class="th-filter-clear" onclick="clearArFilter('requester')">초기화</button>
+        <button class="th-filter-apply" onclick="applyArFilter('requester')">적용</button>
       </div>`;
   }
 
@@ -4550,6 +4567,7 @@ function renderAllTickets() {
     if (arFilters.priority.length && !arFilters.priority.includes(t.priority || 'normal')) return false;
     if (arFilters.status.length && !arFilters.status.includes(t.status)) return false;
     if (arFilters.company.length && !arFilters.company.includes(t.company?.name)) return false;
+    if (arFilters.requester.length && !arFilters.requester.includes(t.requester?.name)) return false;
     if (arFilters.assignee.length) {
       const assigneeName = t.assignee?.name;
       const matchesUnassigned = arFilters.assignee.includes('__unassigned') && !assigneeName;
