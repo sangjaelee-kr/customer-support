@@ -3023,6 +3023,7 @@ let ticketFilter = 'all';
 async function loadTickets() {
   const tbody = document.getElementById('ticket-tbody');
   if (!tbody) return;
+  detachSharedRequestDetail(tbody);
 
   tbody.innerHTML = '<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>';
 
@@ -3070,20 +3071,23 @@ function applyTicketFilter() {
   renderTickets(filtered);
 }
 
+// 요청 아코디언에 열려 있던 공용 상세 패널(rd-detail-content)이 tbody를 통째로 갈아끼울 때
+// (innerHTML 재할당) 함께 파괴되지 않도록, 갈아끼우기 전에 안전한 자리로 빼둔다.
+function detachSharedRequestDetail(tbody) {
+  const detailContent = document.getElementById('rd-detail-content');
+  if (!detailContent || !tbody || !tbody.contains(detailContent)) return;
+  const rdPanel = document.getElementById('rd-detail-panel');
+  if (rdPanel) rdPanel.appendChild(detailContent);
+  detailContent.style.display = 'none';
+  const emptyHint = document.getElementById('rd-empty-hint');
+  if (emptyHint) emptyHint.style.display = '';
+  rdTicket = null;
+}
+
 function renderTickets(tickets) {
   const tbody = document.getElementById('ticket-tbody');
   if (!tbody) return;
-
-  // 재렌더링(검색/필터) 시 아코디언에 들어가 있던 상세 패널이 함께 삭제되지 않도록 미리 빼두고 접기
-  const detailContent = document.getElementById('rd-detail-content');
-  if (detailContent && tbody.contains(detailContent)) {
-    const rdPanel = document.getElementById('rd-detail-panel');
-    if (rdPanel) rdPanel.appendChild(detailContent);
-    detailContent.style.display = 'none';
-    const emptyHint = document.getElementById('rd-empty-hint');
-    if (emptyHint) emptyHint.style.display = '';
-    rdTicket = null;
-  }
+  detachSharedRequestDetail(tbody);
 
   if (!tickets.length) {
     tbody.innerHTML = '<tr><td colspan="9" style="padding:40px;text-align:center;color:var(--faint);">등록된 요청이 없습니다.</td></tr>';
@@ -4364,6 +4368,7 @@ let mgTicket = null;
 async function loadAllTickets() {
   const tbody = document.getElementById('ar-tbody');
   if (!tbody) return;
+  detachSharedRequestDetail(tbody);
   tbody.innerHTML = '<tr><td colspan="10" style="padding:24px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>';
 
   if (!sb) {
@@ -4414,17 +4419,7 @@ async function loadAllTickets() {
 function renderAllTickets() {
   const tbody = document.getElementById('ar-tbody');
   if (!tbody) return;
-
-  // 재렌더링(검색/필터) 시 아코디언에 들어가 있던 상세 패널이 함께 삭제되지 않도록 미리 빼두고 접기
-  const detailContent = document.getElementById('rd-detail-content');
-  if (detailContent && tbody.contains(detailContent)) {
-    const rdPanel = document.getElementById('rd-detail-panel');
-    if (rdPanel) rdPanel.appendChild(detailContent);
-    detailContent.style.display = 'none';
-    const emptyHint = document.getElementById('rd-empty-hint');
-    if (emptyHint) emptyHint.style.display = '';
-    rdTicket = null;
-  }
+  detachSharedRequestDetail(tbody);
 
   const ROLE_ALLOWED_CATS_RENDER = { tech_support: ['tech_support', 'other'], sales: ['contract', 'license', 'education', 'other'] };
   const renderAllowedCats = ROLE_ALLOWED_CATS_RENDER[currentUser?.role] || null;
