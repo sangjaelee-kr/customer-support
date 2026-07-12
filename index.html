@@ -982,8 +982,8 @@ textarea{resize:vertical;min-height:100px;}
               <button class="btn btn-outline btn-sm" onclick="openLicenseModal()">+ 라이선스정보 입력</button>
             </div>
             <div class="tbl-scroll"><table class="tbl">
-              <thead><tr><th>제품정보</th><th>라이선스종류</th><th>라이선스상태</th><th>수량</th><th>시작일자</th><th>만료일자</th><th>갱신예정일자</th><th>라이선스키</th><th>비고</th><th>액션</th></tr></thead>
-              <tbody id="licenses-tbody"><tr><td colspan="10" style="padding:20px;text-align:center;color:var(--faint);">라이선스 정보를 불러오는 중...</td></tr></tbody>
+              <thead><tr><th>제품정보</th><th>라이선스종류</th><th>라이선스상태</th><th>수량</th><th>시작일자</th><th>만료일자</th><th>갱신예정일자</th><th>라이선스키</th><th>비고</th><th>첨부파일</th><th>액션</th></tr></thead>
+              <tbody id="licenses-tbody"><tr><td colspan="11" style="padding:20px;text-align:center;color:var(--faint);">라이선스 정보를 불러오는 중...</td></tr></tbody>
             </table></div>
           </div>
         </div>
@@ -1550,9 +1550,18 @@ textarea{resize:vertical;min-height:100px;}
           <label>계약금액</label>
           <input type="text" id="ct-amount" placeholder="예: 50,000,000">
         </div>
-        <div class="form-group">
-          <label>계약문서 URL</label>
-          <input type="text" id="ct-doc-url" placeholder="https://...">
+        <div class="form-group span2">
+          <label>계약문서 첨부</label>
+          <div id="ct-dropzone" onclick="document.getElementById('ct-file-input').click()"
+            style="border:2px dashed var(--border-md);border-radius:var(--r-md);padding:20px;text-align:center;cursor:pointer;transition:border-color .15s;background:var(--surface2);"
+            ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+            ondragleave="this.style.borderColor='var(--border-md)'"
+            ondrop="event.preventDefault();this.style.borderColor='var(--border-md)';handleContractFileDrop(event.dataTransfer.files)">
+            <div id="ct-dropzone-label" style="font-size:13px;color:var(--muted);">클릭하거나 파일을 여기로 드래그하세요</div>
+          </div>
+          <input type="file" id="ct-file-input" style="display:none;" onchange="handleContractFileDrop(this.files)">
+          <input type="hidden" id="ct-file-path">
+          <input type="hidden" id="ct-filename">
         </div>
         <div class="form-group span2">
           <label>비고</label>
@@ -1630,6 +1639,19 @@ textarea{resize:vertical;min-height:100px;}
         <div class="form-group span2">
           <label>갱신예정일자</label>
           <input type="date" id="lic-renewal">
+        </div>
+        <div class="form-group span2">
+          <label>첨부파일</label>
+          <div id="lic-dropzone" onclick="document.getElementById('lic-file-input').click()"
+            style="border:2px dashed var(--border-md);border-radius:var(--r-md);padding:20px;text-align:center;cursor:pointer;transition:border-color .15s;background:var(--surface2);"
+            ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+            ondragleave="this.style.borderColor='var(--border-md)'"
+            ondrop="event.preventDefault();this.style.borderColor='var(--border-md)';handleLicenseFileDrop(event.dataTransfer.files)">
+            <div id="lic-dropzone-label" style="font-size:13px;color:var(--muted);">클릭하거나 파일을 여기로 드래그하세요</div>
+          </div>
+          <input type="file" id="lic-file-input" style="display:none;" onchange="handleLicenseFileDrop(this.files)">
+          <input type="hidden" id="lic-file-path">
+          <input type="hidden" id="lic-filename">
         </div>
         <div class="form-group span2">
           <label>비고</label>
@@ -3565,6 +3587,39 @@ function closeCompanyDetail() {
   if (row) row.style.display = 'none';
 }
 
+async function downloadPrivateFile(bucket, path, filename) {
+  if (!path || !sb) return;
+  const { data, error } = await sb.storage.from(bucket).createSignedUrl(path, 60);
+  if (error || !data?.signedUrl) { showToast('파일을 불러올 수 없습니다: ' + (error?.message || ''), true); return; }
+  const a = document.createElement('a');
+  a.href = data.signedUrl;
+  a.download = filename || '';
+  a.target = '_blank';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+let _contractFile = null;
+function handleContractFileDrop(files) {
+  if (!files || !files.length) return;
+  const f = files[0];
+  _contractFile = f;
+  document.getElementById('ct-filename').value = f.name;
+  document.getElementById('ct-dropzone-label').textContent = `${f.name} (${(f.size / 1024).toFixed(1)} KB)`;
+  document.getElementById('ct-dropzone').style.borderColor = 'var(--accent)';
+}
+
+let _licenseFile = null;
+function handleLicenseFileDrop(files) {
+  if (!files || !files.length) return;
+  const f = files[0];
+  _licenseFile = f;
+  document.getElementById('lic-filename').value = f.name;
+  document.getElementById('lic-dropzone-label').textContent = `${f.name} (${(f.size / 1024).toFixed(1)} KB)`;
+  document.getElementById('lic-dropzone').style.borderColor = 'var(--accent)';
+}
+
 async function loadCompanyContracts() {
   const tbody = document.getElementById('contracts-tbody');
   if (!tbody || !selectedCompanyId) return;
@@ -3587,10 +3642,10 @@ async function loadCompanyContracts() {
       <td style="font-size:12px;">${escHtml(ct.bixs_contact    || '—')}</td>
       <td style="font-size:12px;">${ct.amount ? escHtml(ct.amount) : '—'}</td>
       <td style="font-size:12px;max-width:120px;white-space:normal;">${escHtml(ct.note || '—')}</td>
-      <td style="font-size:12px;">${ct.document_url ? `<a href="${escHtml(ct.document_url)}" target="_blank" style="color:var(--accent);">보기</a>` : '—'}</td>
+      <td style="font-size:12px;">${ct.file_path ? `<button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="downloadPrivateFile('contract-attachments','${escHtml(ct.file_path)}','${escHtml(ct.file_name||'')}')">📎 ${escHtml(ct.file_name || '다운로드')}</button>` : '—'}</td>
       <td style="white-space:nowrap;">
         <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick='openEditContractModal(${escHtml(JSON.stringify(ct).replace(/'/g,"&#39;"))})'>수정</button>
-        <button class="btn btn-ghost btn-sm" style="font-size:11px;color:#e53e3e;" onclick="deleteContract('${ct.id}')">삭제</button>
+        <button class="btn btn-ghost btn-sm" style="font-size:11px;color:#e53e3e;" onclick="deleteContract('${ct.id}','${escHtml(ct.file_path||'')}')">삭제</button>
       </td>
     </tr>`).join('');
 }
@@ -3598,11 +3653,11 @@ async function loadCompanyContracts() {
 async function loadCompanyLicenses() {
   const tbody = document.getElementById('licenses-tbody');
   if (!tbody || !selectedCompanyId) return;
-  tbody.innerHTML = '<tr><td colspan="10" style="padding:20px;text-align:center;color:var(--faint);">불러오는 중...</td></tr>';
-  if (!sb) { tbody.innerHTML = '<tr><td colspan="10" style="padding:20px;text-align:center;color:var(--faint);">DB 미연결</td></tr>'; return; }
+  tbody.innerHTML = '<tr><td colspan="11" style="padding:20px;text-align:center;color:var(--faint);">불러오는 중...</td></tr>';
+  if (!sb) { tbody.innerHTML = '<tr><td colspan="11" style="padding:20px;text-align:center;color:var(--faint);">DB 미연결</td></tr>'; return; }
   const { data, error } = await sb.from('company_licenses').select('*').eq('company_id', selectedCompanyId).order('created_at', { ascending: false });
   if (error || !data || !data.length) {
-    tbody.innerHTML = '<tr><td colspan="10" style="padding:20px;text-align:center;color:var(--faint);">등록된 라이선스 정보가 없습니다.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" style="padding:20px;text-align:center;color:var(--faint);">등록된 라이선스 정보가 없습니다.</td></tr>';
     return;
   }
   const LIC_STATUS_BADGE = { 활성:'b-green', 만료:'b-red', 일시중단:'b-amber', 대기:'b-gray' };
@@ -3623,11 +3678,20 @@ async function loadCompanyLicenses() {
       <td style="font-size:12px;">${l.renewal_date ? l.renewal_date.slice(0,10) : '—'}</td>
       <td style="font-size:12px;max-width:100px;overflow:hidden;text-overflow:ellipsis;">${escHtml(l.license_key || '—')}</td>
       <td style="font-size:12px;max-width:100px;white-space:normal;">${escHtml(l.note || '—')}</td>
+      <td style="font-size:12px;">${l.file_path ? `<button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="downloadPrivateFile('contract-attachments','${escHtml(l.file_path)}','${escHtml(l.file_name||'')}')">📎 ${escHtml(l.file_name || '다운로드')}</button>` : '—'}</td>
       <td style="white-space:nowrap;">
         <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick='openEditLicenseModal(${escHtml(JSON.stringify(l).replace(/'/g,"&#39;"))})'>수정</button>
-        <button class="btn btn-ghost btn-sm" style="font-size:11px;color:#e53e3e;" onclick="deleteLicense('${l.id}')">삭제</button>
+        <button class="btn btn-ghost btn-sm" style="font-size:11px;color:#e53e3e;" onclick="deleteLicense('${l.id}','${escHtml(l.file_path||'')}')">삭제</button>
       </td>
     </tr>`; }).join('');
+}
+
+function resetContractDropzone() {
+  document.getElementById('ct-file-path').value = '';
+  document.getElementById('ct-filename').value = '';
+  document.getElementById('ct-dropzone-label').textContent = '클릭하거나 파일을 여기로 드래그하세요';
+  document.getElementById('ct-dropzone').style.borderColor = '';
+  _contractFile = null;
 }
 
 function openContractModal() {
@@ -3636,11 +3700,12 @@ function openContractModal() {
   document.getElementById('btn-submit-contract').textContent  = '등록';
   document.getElementById('ct-id').value = '';
   document.getElementById('ct-company-id').value = selectedCompanyId;
-  ['ct-name','ct-start','ct-end','ct-customer-contact','ct-bixs-contact','ct-amount','ct-doc-url','ct-note'].forEach(id => {
+  ['ct-name','ct-start','ct-end','ct-customer-contact','ct-bixs-contact','ct-amount','ct-note'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   document.getElementById('ct-type').value   = '';
   document.getElementById('ct-status').value = '진행중';
+  resetContractDropzone();
   openModal('modal-contract');
 }
 
@@ -3657,8 +3722,14 @@ function openEditContractModal(ct) {
   document.getElementById('ct-customer-contact').value= ct.customer_contact || '';
   document.getElementById('ct-bixs-contact').value   = ct.bixs_contact   || '';
   document.getElementById('ct-amount').value          = ct.amount         || '';
-  document.getElementById('ct-doc-url').value         = ct.document_url   || '';
   document.getElementById('ct-note').value            = ct.note           || '';
+  resetContractDropzone();
+  document.getElementById('ct-file-path').value = ct.file_path || '';
+  document.getElementById('ct-filename').value  = ct.file_name || '';
+  if (ct.file_name) {
+    document.getElementById('ct-dropzone-label').textContent = '📎 ' + ct.file_name;
+    document.getElementById('ct-dropzone').style.borderColor = 'var(--accent)';
+  }
   openModal('modal-contract');
 }
 
@@ -3669,6 +3740,24 @@ async function submitContract() {
   if (!name) { showToast('계약명은 필수입니다.', true); return; }
   const btn = document.getElementById('btn-submit-contract');
   if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
+
+  let file_path = document.getElementById('ct-file-path').value || null;
+  let file_name = document.getElementById('ct-filename').value || null;
+  if (_contractFile) {
+    const ext = _contractFile.name.includes('.') ? _contractFile.name.split('.').pop().toLowerCase() : 'bin';
+    const storageName = `${companyId}/${Date.now()}.${ext}`;
+    const { data: upData, error: upErr } = await sb.storage
+      .from('contract-attachments')
+      .upload(storageName, _contractFile, { upsert: false, contentType: _contractFile.type || 'application/octet-stream' });
+    if (upErr) {
+      showToast('파일 업로드 실패: ' + upErr.message, true);
+      if (btn) { btn.disabled = false; btn.textContent = id ? '저장' : '등록'; }
+      return;
+    }
+    file_path = upData.path;
+    file_name = _contractFile.name;
+  }
+
   const payload = {
     company_id:       companyId,
     contract_name:    name,
@@ -3679,7 +3768,8 @@ async function submitContract() {
     customer_contact: document.getElementById('ct-customer-contact').value.trim() || null,
     bixs_contact:     document.getElementById('ct-bixs-contact').value.trim()    || null,
     amount:           document.getElementById('ct-amount').value.trim()          || null,
-    document_url:     document.getElementById('ct-doc-url').value.trim()         || null,
+    file_path,
+    file_name,
     note:             document.getElementById('ct-note').value.trim()            || null,
   };
   let error;
@@ -3690,17 +3780,27 @@ async function submitContract() {
   }
   if (btn) { btn.disabled = false; btn.textContent = id ? '저장' : '등록'; }
   if (error) { showToast('저장 실패: ' + error.message, true); return; }
+  _contractFile = null;
   closeModal('modal-contract');
   showToast('✅ 계약정보가 ' + (id ? '수정' : '등록') + '되었습니다.');
   loadCompanyContracts();
 }
 
-async function deleteContract(id) {
+async function deleteContract(id, filePath) {
   if (!confirm('계약 정보를 삭제하시겠습니까?')) return;
+  if (filePath) await sb.storage.from('contract-attachments').remove([filePath]);
   const { error } = await sb.from('company_contracts').delete().eq('id', id);
   if (error) { showToast('삭제 실패: ' + error.message, true); return; }
   showToast('삭제되었습니다.');
   loadCompanyContracts();
+}
+
+function resetLicenseDropzone() {
+  document.getElementById('lic-file-path').value = '';
+  document.getElementById('lic-filename').value = '';
+  document.getElementById('lic-dropzone-label').textContent = '클릭하거나 파일을 여기로 드래그하세요';
+  document.getElementById('lic-dropzone').style.borderColor = '';
+  _licenseFile = null;
 }
 
 function openLicenseModal() {
@@ -3717,6 +3817,7 @@ function openLicenseModal() {
   document.getElementById('lic-start').value    = '';
   document.getElementById('lic-expire').value   = '';
   document.getElementById('lic-renewal').value  = '';
+  resetLicenseDropzone();
   openModal('modal-license');
 }
 
@@ -3734,6 +3835,13 @@ function openEditLicenseModal(l) {
   document.getElementById('lic-expire').value     = l.expire_date    ? l.expire_date.slice(0,10)   : '';
   document.getElementById('lic-renewal').value    = l.renewal_date   ? l.renewal_date.slice(0,10)  : '';
   document.getElementById('lic-note').value       = l.note           || '';
+  resetLicenseDropzone();
+  document.getElementById('lic-file-path').value = l.file_path || '';
+  document.getElementById('lic-filename').value  = l.file_name || '';
+  if (l.file_name) {
+    document.getElementById('lic-dropzone-label').textContent = '📎 ' + l.file_name;
+    document.getElementById('lic-dropzone').style.borderColor = 'var(--accent)';
+  }
   openModal('modal-license');
 }
 
@@ -3744,6 +3852,24 @@ async function submitLicense() {
   if (!product) { showToast('제품정보는 필수입니다.', true); return; }
   const btn = document.getElementById('btn-submit-license');
   if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
+
+  let file_path = document.getElementById('lic-file-path').value || null;
+  let file_name = document.getElementById('lic-filename').value || null;
+  if (_licenseFile) {
+    const ext = _licenseFile.name.includes('.') ? _licenseFile.name.split('.').pop().toLowerCase() : 'bin';
+    const storageName = `${companyId}/${Date.now()}.${ext}`;
+    const { data: upData, error: upErr } = await sb.storage
+      .from('contract-attachments')
+      .upload(storageName, _licenseFile, { upsert: false, contentType: _licenseFile.type || 'application/octet-stream' });
+    if (upErr) {
+      showToast('파일 업로드 실패: ' + upErr.message, true);
+      if (btn) { btn.disabled = false; btn.textContent = id ? '저장' : '등록'; }
+      return;
+    }
+    file_path = upData.path;
+    file_name = _licenseFile.name;
+  }
+
   const qtyRaw = document.getElementById('lic-quantity').value;
   const payload = {
     company_id:   companyId,
@@ -3755,6 +3881,8 @@ async function submitLicense() {
     start_date:   document.getElementById('lic-start').value           || null,
     expire_date:  document.getElementById('lic-expire').value          || null,
     renewal_date: document.getElementById('lic-renewal').value         || null,
+    file_path,
+    file_name,
     note:         document.getElementById('lic-note').value.trim()     || null,
   };
   let error;
@@ -3765,13 +3893,15 @@ async function submitLicense() {
   }
   if (btn) { btn.disabled = false; btn.textContent = id ? '저장' : '등록'; }
   if (error) { showToast('저장 실패: ' + error.message, true); return; }
+  _licenseFile = null;
   closeModal('modal-license');
   showToast('✅ 라이선스정보가 ' + (id ? '수정' : '등록') + '되었습니다.');
   loadCompanyLicenses();
 }
 
-async function deleteLicense(id) {
+async function deleteLicense(id, filePath) {
   if (!confirm('라이선스 정보를 삭제하시겠습니까?')) return;
+  if (filePath) await sb.storage.from('contract-attachments').remove([filePath]);
   const { error } = await sb.from('company_licenses').delete().eq('id', id);
   if (error) { showToast('삭제 실패: ' + error.message, true); return; }
   showToast('삭제되었습니다.');
