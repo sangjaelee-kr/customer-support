@@ -467,7 +467,7 @@ textarea{resize:vertical;min-height:100px;}
           <div class="stat-sub" id="dash-avgtime-sub">최근 30일 기준</div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;">
+      <div style="display:grid;grid-template-columns:400px 1fr;gap:16px;align-items:start;">
         <div class="card dash-notice-card" style="display:none;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
             <div class="card-title" style="margin-bottom:0;">📢 공지사항</div>
@@ -501,7 +501,7 @@ textarea{resize:vertical;min-height:100px;}
             <div class="stat"><div class="stat-label">처리 완료 (오늘)</div><div class="stat-val" style="color:var(--green);" id="dash-admin-done-val">—</div><div class="stat-sub"></div></div>
             <div class="stat"><div class="stat-label">전체 고객사</div><div class="stat-val" id="dash-admin-companies-val">—</div><div class="stat-sub" id="dash-admin-companies-sub"></div></div>
           </div>
-          <div style="display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;">
+          <div style="display:grid;grid-template-columns:400px 1fr;gap:16px;align-items:start;">
             <div class="card dash-notice-card" style="display:none;">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                 <div class="card-title" style="margin-bottom:0;">📢 공지사항</div>
@@ -1649,9 +1649,47 @@ textarea{resize:vertical;min-height:100px;}
   <div class="modal-box" style="background:var(--surface);border-radius:var(--r-lg);width:560px;max-height:80vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);">
     <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
       <div style="font-size:16px;font-weight:800;">공지사항 전체보기</div>
-      <button onclick="closeModal('modal-notices')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--faint);">✕</button>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="btn btn-outline btn-sm" id="notice-add-btn" style="display:none;" onclick="openNewNoticeModal()">+ 공지 등록</button>
+        <button onclick="closeModal('modal-notices')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--faint);">✕</button>
+      </div>
     </div>
     <div style="padding:8px 24px 20px;" id="all-notices-list"></div>
+  </div>
+</div>
+
+<!-- 공지 등록/수정 모달 -->
+<div id="modal-notice-edit" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.35);align-items:center;justify-content:center;">
+  <div class="modal-box" style="background:var(--surface);border-radius:var(--r-lg);width:480px;max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:16px;font-weight:800;" id="modal-notice-edit-title">공지 등록</div>
+      <button onclick="closeModal('modal-notice-edit')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--faint);">✕</button>
+    </div>
+    <div style="padding:24px;">
+      <input type="hidden" id="ntc-id">
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="form-group">
+          <label>카테고리 <span class="req">*</span></label>
+          <select id="ntc-category">
+            <option value="점검">점검</option>
+            <option value="안내">안내</option>
+            <option value="완료">완료</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>제목 <span class="req">*</span></label>
+          <input type="text" id="ntc-title" placeholder="공지 제목">
+        </div>
+        <div class="form-group">
+          <label>내용</label>
+          <textarea id="ntc-body" rows="4" style="width:100%;resize:vertical;" placeholder="공지 상세 내용 (선택)"></textarea>
+        </div>
+      </div>
+    </div>
+    <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;">
+      <button class="btn btn-ghost" onclick="closeModal('modal-notice-edit')">취소</button>
+      <button class="btn btn-primary" id="btn-submit-notice" onclick="submitNotice()">저장</button>
+    </div>
   </div>
 </div>
 
@@ -2683,6 +2721,10 @@ function initSupabase() {
 let dashRecentTickets = [];
 const NOTICE_BADGE = { 점검:'b-amber', 안내:'b-gray', 완료:'b-green' };
 
+function isNoticeAdmin() {
+  return currentUser && ['tech_support','admin'].includes(currentUser.role);
+}
+
 async function loadNotices() {
   const cards = document.querySelectorAll('.dash-notice-card');
   const lists = document.querySelectorAll('.dash-notice-list');
@@ -2690,10 +2732,12 @@ async function loadNotices() {
   const { data, error } = await sb.from('content_notices').select('*').order('created_at', { ascending: false }).limit(3);
   if (error || !data || !data.length) { cards.forEach(c => c.style.display = 'none'); return; }
   const html = data.map((n, i) => `
-    <div style="display:flex;gap:10px;align-items:center;padding:8px 0;${i < data.length - 1 ? 'border-bottom:1px solid var(--border);' : ''}">
-      <span class="badge ${NOTICE_BADGE[n.category] || 'b-gray'}" style="flex-shrink:0;">${escHtml(n.category || '안내')}</span>
-      <span style="font-size:11px;flex:1;">${escHtml(n.title)}</span>
-      <span style="font-size:10px;color:var(--faint);flex-shrink:0;">${(n.created_at || '').slice(0,10)}</span>
+    <div style="padding:8px 0;${i < data.length - 1 ? 'border-bottom:1px solid var(--border);' : ''}">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:3px;">
+        <span class="badge ${NOTICE_BADGE[n.category] || 'b-gray'}">${escHtml(n.category || '안내')}</span>
+        <span style="font-size:10px;color:var(--faint);white-space:nowrap;">${(n.created_at || '').slice(0,10)}</span>
+      </div>
+      <div style="font-size:11px;line-height:1.4;">${escHtml(n.title)}</div>
     </div>`).join('');
   cards.forEach(c => c.style.display = '');
   lists.forEach(l => l.innerHTML = html);
@@ -2701,6 +2745,8 @@ async function loadNotices() {
 
 async function openAllNoticesModal() {
   const body = document.getElementById('all-notices-list');
+  const addBtn = document.getElementById('notice-add-btn');
+  if (addBtn) addBtn.style.display = isNoticeAdmin() ? '' : 'none';
   if (!body) return;
   body.innerHTML = '<div style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</div>';
   openModal('modal-notices');
@@ -2710,15 +2756,72 @@ async function openAllNoticesModal() {
     body.innerHTML = '<div style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">등록된 공지가 없습니다.</div>';
     return;
   }
+  const isAdmin = isNoticeAdmin();
   body.innerHTML = data.map((n, i) => `
     <div style="padding:14px 0;${i < data.length - 1 ? 'border-bottom:1px solid var(--border);' : ''}">
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
-        <span class="badge ${NOTICE_BADGE[n.category] || 'b-gray'}">${escHtml(n.category || '안내')}</span>
-        <span style="font-weight:700;font-size:13px;">${escHtml(n.title)}</span>
-        <span style="font-size:11px;color:var(--faint);margin-left:auto;white-space:nowrap;">${(n.created_at || '').slice(0,10)}</span>
+        <span class="badge ${NOTICE_BADGE[n.category] || 'b-gray'}" style="flex-shrink:0;">${escHtml(n.category || '안내')}</span>
+        <span style="font-weight:700;font-size:13px;flex:1;">${escHtml(n.title)}</span>
+        <span style="font-size:11px;color:var(--faint);white-space:nowrap;flex-shrink:0;">${(n.created_at || '').slice(0,10)}</span>
       </div>
-      ${n.body ? `<div style="font-size:12px;color:var(--muted);line-height:1.6;">${escHtml(n.body).replace(/\n/g,'<br>')}</div>` : ''}
+      ${n.body ? `<div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:${isAdmin ? '8' : '0'}px;">${escHtml(n.body).replace(/\n/g,'<br>')}</div>` : ''}
+      ${isAdmin ? `<div style="display:flex;gap:6px;">
+        <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick='openEditNoticeModal(${escHtml(JSON.stringify(n).replace(/'/g,"&#39;"))})'>수정</button>
+        <button class="btn btn-ghost btn-sm" style="font-size:11px;color:#e53e3e;" onclick="deleteNotice('${n.id}','${escHtml((n.title||'').replace(/'/g,"\\'"))}')">삭제</button>
+      </div>` : ''}
     </div>`).join('');
+}
+
+function openNewNoticeModal() {
+  document.getElementById('modal-notice-edit-title').textContent = '공지 등록';
+  document.getElementById('ntc-id').value = '';
+  document.getElementById('ntc-category').value = '안내';
+  document.getElementById('ntc-title').value = '';
+  document.getElementById('ntc-body').value = '';
+  openModal('modal-notice-edit');
+}
+
+function openEditNoticeModal(n) {
+  document.getElementById('modal-notice-edit-title').textContent = '공지 수정';
+  document.getElementById('ntc-id').value = n.id;
+  document.getElementById('ntc-category').value = n.category || '안내';
+  document.getElementById('ntc-title').value = n.title || '';
+  document.getElementById('ntc-body').value = n.body || '';
+  openModal('modal-notice-edit');
+}
+
+async function submitNotice() {
+  const saveBtn = document.getElementById('btn-submit-notice');
+  if (saveBtn?.disabled) return;
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '저장 중...'; }
+  const restoreBtn = () => { if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '저장'; } };
+
+  const id = document.getElementById('ntc-id').value;
+  const title = document.getElementById('ntc-title').value.trim();
+  const category = document.getElementById('ntc-category').value;
+  const body = document.getElementById('ntc-body').value.trim() || null;
+  if (!title) { showToast('제목을 입력하세요.', true); restoreBtn(); return; }
+
+  const payload = { title, category, body, updated_at: new Date().toISOString() };
+  let error;
+  if (id) ({ error } = await sb.from('content_notices').update(payload).eq('id', id));
+  else    ({ error } = await sb.from('content_notices').insert(payload));
+  restoreBtn();
+  if (error) { showToast('저장 실패: ' + error.message, true); return; }
+
+  closeModal('modal-notice-edit');
+  showToast('✅ 저장됐습니다.');
+  loadNotices();
+  openAllNoticesModal();
+}
+
+async function deleteNotice(id, title) {
+  if (!confirm(`"${title}" 공지를 삭제하시겠습니까?`)) return;
+  const { error } = await sb.from('content_notices').delete().eq('id', id);
+  if (error) { showToast('삭제 실패: ' + error.message, true); return; }
+  showToast('삭제됐습니다.');
+  loadNotices();
+  openAllNoticesModal();
 }
 
 async function loadDashboard() {
