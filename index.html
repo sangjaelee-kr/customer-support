@@ -109,13 +109,14 @@ textarea{resize:vertical;min-height:100px;}
 .tbl{width:100%;border-collapse:collapse;}
 .tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .list-scroll{max-height:560px;overflow-y:auto;}
-.list-scroll thead th{position:sticky;top:0;background:var(--surface);z-index:1;}
+.list-scroll thead th{position:sticky;top:0;background:var(--surface);z-index:3;}
 .tbl th{font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;}
 .tbl td{padding:11px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;white-space:nowrap;}
 .tbl tr:last-child td{border-bottom:none;}
 .tbl tr:hover td{background:var(--surface2);cursor:pointer;}
 .company-detail-row:hover td{background:inherit !important;cursor:default !important;}
 .ticket-row.open td{background:var(--accent-l);}
+.ticket-row.open{position:sticky;z-index:2;box-shadow:0 1px 0 var(--border-md);}
 .ticket-row .row-arrow{display:inline-block;font-size:11px;color:var(--faint);margin-left:6px;transition:transform .15s;}
 .ticket-row.open .row-arrow{transform:rotate(180deg);color:var(--accent);}
 .ticket-detail-row:hover td{background:inherit !important;cursor:default !important;}
@@ -3049,7 +3050,8 @@ function applyTicketFilter() {
   renderTickets(filtered);
 }
 
-// 펼친 요청 행이 스크롤 영역 맨 위(고정 헤더 바로 아래)에 오도록 스크롤 위치 보정
+// 펼친 요청 행을 스크롤 영역 맨 위(고정 헤더 바로 아래)로 스크롤하고, 이후 스크롤해도
+// 그 자리(헤더 바로 아래)에 계속 고정되도록 sticky top 값을 지정 (position:sticky는 CSS의 .ticket-row.open 규칙에서 처리)
 function pinRowToTop(tr) {
   const container = tr.closest('.list-scroll');
   if (!container) return;
@@ -3057,6 +3059,7 @@ function pinRowToTop(tr) {
   const headerHeight = headerEl ? headerEl.getBoundingClientRect().height : 0;
   const delta = tr.getBoundingClientRect().top - container.getBoundingClientRect().top - headerHeight;
   container.scrollTop += delta;
+  tr.style.top = headerHeight + 'px';
 }
 
 // 요청 아코디언에 열려 있던 공용 상세 패널(rd-detail-content)이 tbody를 통째로 갈아끼울 때
