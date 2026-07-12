@@ -432,7 +432,6 @@ textarea{resize:vertical;min-height:100px;}
     <span class="nt active" data-roles="all"                       onclick="showPage(this,'p-dashboard')">홈</span>
     <span class="nt"        data-roles="customer,internal"         onclick="showPage(this,'p-my-requests')">요청</span>
     <span class="nt"        data-roles="tech_support,sales,admin"  onclick="showPage(this,'p-all-requests')">요청 관리</span>
-    <span class="nt"        data-roles="tech_support,admin"        onclick="showPage(this,'p-request-detail')">요청 상세/처리</span>
     <span class="nt"        data-roles="__none__"                  onclick="showPage(this,'p-license')">라이선스 / 계약</span>
     <span class="nt"        data-roles="customer,internal"         onclick="showPage(this,'p-downloads')">자료실</span>
     <span class="nt"        data-roles="tech_support,admin"        onclick="showPage(this,'p-downloads')">자료실 관리</span>
@@ -4413,6 +4412,18 @@ async function loadAllTickets() {
 function renderAllTickets() {
   const tbody = document.getElementById('ar-tbody');
   if (!tbody) return;
+
+  // 재렌더링(검색/필터) 시 아코디언에 들어가 있던 상세 패널이 함께 삭제되지 않도록 미리 빼두고 접기
+  const detailContent = document.getElementById('rd-detail-content');
+  if (detailContent && tbody.contains(detailContent)) {
+    const rdPanel = document.getElementById('rd-detail-panel');
+    if (rdPanel) rdPanel.appendChild(detailContent);
+    detailContent.style.display = 'none';
+    const emptyHint = document.getElementById('rd-empty-hint');
+    if (emptyHint) emptyHint.style.display = '';
+    rdTicket = null;
+  }
+
   const ROLE_ALLOWED_CATS_RENDER = { tech_support: ['tech_support', 'other'], sales: ['contract', 'license', 'education', 'other'] };
   const renderAllowedCats = ROLE_ALLOWED_CATS_RENDER[currentUser?.role] || null;
   const q = (document.getElementById('ar-search')?.value || '').toLowerCase();
@@ -4424,7 +4435,8 @@ function renderAllTickets() {
     tbody.innerHTML = '<tr><td colspan="11" style="padding:24px;text-align:center;color:var(--faint);font-size:13px;">조건에 맞는 요청이 없습니다.</td></tr>';
     return;
   }
-  tbody.innerHTML = list.map((t, i) => {
+  tbody.innerHTML = list.map((t) => {
+    const idx       = allMgTickets.indexOf(t);
     const catL      = CATEGORY_LABELS[t.category]  || t.category || '—';
     const catB      = CATEGORY_BADGE[t.category]   || 'b-gray';
     const statL     = STATUS_LABELS[t.status]       || t.status   || '—';
@@ -4436,9 +4448,9 @@ function renderAllTickets() {
     const asgn      = t.assignee?.name  ? escHtml(t.assignee.name)  : '<span style="color:var(--faint);">미배정</span>';
     const date    = (t.created_at||'').slice(0,10);
     const dueDate = t.due_date ? t.due_date.slice(0,10) : '<span style="color:var(--faint);">—</span>';
-    return `<tr style="cursor:pointer;" onclick="goToRequestDetail(${i})">
+    return `<tr class="ticket-row" style="cursor:pointer;" data-id="${t.id}" onclick="toggleAllTicketRow(this, allMgTickets[${idx}])">
       <td style="color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums;font-size:12px;">${escHtml(t.ticket_number||'—')}</td>
-      <td style="font-size:13px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(t.title||'')}</td>
+      <td style="font-size:13px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(t.title||'')}<span class="row-arrow">▾</span></td>
       <td><span class="badge ${catB}">${catL}</span></td>
       <td><span class="badge ${priB}">${priL}</span></td>
       <td><span class="badge ${statB}">${statL}</span></td>
@@ -4447,21 +4459,46 @@ function renderAllTickets() {
       <td style="font-size:12px;">${asgn}</td>
       <td style="color:var(--faint);font-size:12px;">${date}</td>
       <td style="font-size:12px;font-variant-numeric:tabular-nums;">${dueDate}</td>
-      <td><button class="btn btn-primary btn-sm" style="font-size:11px;" onclick="event.stopPropagation();openManage(${i})">처리</button></td>
+      <td><button class="btn btn-primary btn-sm" style="font-size:11px;" onclick="event.stopPropagation();openManage(${idx})">처리</button></td>
+    </tr>
+    <tr class="ticket-detail-row" style="display:none;">
+      <td colspan="11" style="padding:0;background:var(--surface2);"></td>
     </tr>`;
   }).join('');
 }
 
 let rdTicket = null;
 
-// 요청 상세/처리 페이지 진입 — 좌측 리스트 렌더 후 해당 항목 선택
-async function goToRequestDetail(idx) {
-  const detailTab = document.querySelector('#main-navtabs .nt[onclick*="p-request-detail"]');
-  showPage(detailTab, 'p-request-detail');
-  renderRdList();
-  if (idx !== undefined && idx !== null) {
-    await selectRdTicket(idx);
+function toggleAllTicketRow(tr, ticket) {
+  const detailTr = tr.nextElementSibling;
+  const wasOpen = tr.classList.contains('open');
+
+  // 다른 곳에서 열려있던 요청 상세는 모두 접기
+  document.querySelectorAll('#ar-tbody tr.ticket-row.open').forEach(r => {
+    r.classList.remove('open');
+    const dr = r.nextElementSibling;
+    if (dr) dr.style.display = 'none';
+  });
+
+  const detailContent = document.getElementById('rd-detail-content');
+  const rdPanel = document.getElementById('rd-detail-panel');
+  const emptyHint = document.getElementById('rd-empty-hint');
+
+  if (wasOpen) {
+    if (rdPanel && detailContent) rdPanel.appendChild(detailContent);
+    if (detailContent) detailContent.style.display = 'none';
+    if (emptyHint) emptyHint.style.display = '';
+    rdTicket = null;
+    return;
   }
+
+  tr.classList.add('open');
+  if (detailTr) {
+    detailTr.style.display = '';
+    const td = detailTr.querySelector('td');
+    if (td && detailContent) td.appendChild(detailContent);
+  }
+  selectRdTicket(null, ticket);
 }
 
 // 좌측 리스트 렌더
