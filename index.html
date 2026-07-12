@@ -859,11 +859,7 @@ textarea{resize:vertical;min-height:100px;}
                   <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px;">
                     <div style="flex:1;">
                       <textarea id="rd-customer-reply" rows="3" placeholder="답글을 입력하세요..." style="width:100%;resize:vertical;margin-bottom:8px;"></textarea>
-                      <div id="rd-reply-actions" style="display:flex;justify-content:space-between;align-items:center;">
-                        <label id="rd-send-email-wrap" style="font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--muted);">
-                          <input type="checkbox" id="rd-send-email" style="accent-color:var(--accent);">
-                          <span>메일 발송</span>
-                        </label>
+                      <div style="display:flex;justify-content:flex-end;align-items:center;">
                         <button class="btn btn-primary btn-sm" onclick="sendCustomerReply()">답글 등록</button>
                       </div>
                     </div>
@@ -4620,13 +4616,6 @@ async function selectRdTicket(idx, directTicket) {
   const ownerEditBtn = document.getElementById('rd-owner-edit-btn');
   const isOwner = currentUser && rdTicket.created_by === currentUser.id;
   if (ownerEditBtn) ownerEditBtn.style.display = isOwner ? '' : 'none';
-
-  // 고객 계정: 답글 메일 발송 체크박스 숨김
-  const sendEmailWrap = document.getElementById('rd-send-email-wrap');
-  const replyActions  = document.getElementById('rd-reply-actions');
-  const isCustomer    = currentUser?.role === 'customer';
-  if (sendEmailWrap) sendEmailWrap.style.display = isCustomer ? 'none' : 'flex';
-  if (replyActions)  replyActions.style.justifyContent = isCustomer ? 'flex-end' : 'space-between';
 
   // 처리 이력 + 고객 대화 + 내부 메모 + 첨부파일
   const historyBox = document.getElementById('rd-history');
