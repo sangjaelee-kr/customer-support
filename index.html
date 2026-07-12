@@ -477,7 +477,10 @@ textarea{resize:vertical;min-height:100px;}
           <div class="dash-notice-list"></div>
         </div>
         <div class="card">
-          <div class="card-title">최근 기술 지원 요청</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div class="card-title" style="margin-bottom:0;">최근 기술 지원 요청</div>
+            <button class="btn btn-primary btn-sm" onclick="openModal('modal-new')">+ 빠른 요청 생성</button>
+          </div>
           <div class="tbl-scroll"><table class="tbl">
             <thead><tr>
               <th>요청 번호</th><th>제목</th><th>카테고리</th><th>상태</th><th>접수일</th>
