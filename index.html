@@ -958,12 +958,9 @@ textarea{resize:vertical;min-height:100px;}
         <!-- 고객사 선택 시 상세 패널 -->
         <div id="company-detail-panel" style="display:none;margin-top:16px;">
           <div class="card">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-              <div style="display:flex;align-items:center;gap:12px;">
-                <span style="font-size:15px;font-weight:800;" id="company-detail-name">—</span>
-                <span class="badge b-accent" id="company-detail-status"></span>
-              </div>
-              <button class="btn btn-ghost btn-sm" onclick="closeCompanyDetail()">✕ 닫기</button>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+              <span style="font-size:15px;font-weight:800;" id="company-detail-name">—</span>
+              <span class="badge b-accent" id="company-detail-status"></span>
             </div>
 
             <!-- 계약 정보 -->
@@ -3695,22 +3692,8 @@ function selectCompany(rowEl, id, name, statusLabel) {
   targetRow.style.display = '';
   rowEl.classList.add('open');
   pinRowToTop(rowEl);
-  // 고정(sticky)된 고객사 행이 상세 내용 상단을 가리지 않도록, 행 높이만큼 위쪽 여백 확보
-  detailTd.style.paddingTop = (rowEl.getBoundingClientRect().height + 16) + 'px';
   loadCompanyContracts();
   loadCompanyLicenses();
-}
-
-function closeCompanyDetail() {
-  const panel = document.getElementById('company-detail-panel');
-  const row = panel.closest('tr.company-detail-row');
-  selectedCompanyId = null;
-  panel.style.display = 'none';
-  if (row) {
-    row.style.display = 'none';
-    const summaryRow = row.previousElementSibling;
-    if (summaryRow) summaryRow.classList.remove('open');
-  }
 }
 
 async function downloadPrivateFile(bucket, path, filename) {
