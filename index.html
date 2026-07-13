@@ -2053,6 +2053,9 @@ function doLogin() {
 function enterApp(email, acct) {
   currentUser = { email, ...acct };
 
+  // 세션 localStorage 저장 (새 탭/새로고침 시 자동 복구용)
+  try { localStorage.setItem('cs_session', JSON.stringify({ email, ...acct })); } catch(_) {}
+
   // 로그인 시각 기록
   if (sb && acct.id) {
     sb.from('users').update({ last_login: new Date().toISOString() }).eq('id', acct.id).then(() => {});
@@ -2175,6 +2178,7 @@ function doLogout() {
   allMgTickets = [];
   allTickets = [];
   allUsers = [];
+  try { localStorage.removeItem('cs_session'); } catch(_) {}
   goScreen('screen-login');
 }
 
@@ -5805,7 +5809,37 @@ async function downloadDoc(url, filename, docId) {
 //  시작
 // ══════════════════════════════════════════
 initSupabase();
-goScreen('screen-login');
+
+// localStorage 세션 복구 — 저장된 세션이 있으면 자동 로그인
+(function restoreSession() {
+  try {
+    const saved = localStorage.getItem('cs_session');
+    if (!saved) { goScreen('screen-login'); return; }
+    const acct = JSON.parse(saved);
+    if (!acct?.email || !acct?.role) { goScreen('screen-login'); return; }
+    // DB에서 계정 상태 재확인 (비활성화 여부 등)
+    if (sb && acct.id) {
+      sb.from('users').select('is_active').eq('id', acct.id).single().then(({ data }) => {
+        if (data?.is_active === false) {
+          localStorage.removeItem('cs_session');
+          goScreen('screen-login');
+        } else {
+          const { email, ...rest } = acct;
+          enterApp(email, rest);
+        }
+      }).catch(() => {
+        // DB 조회 실패 시 저장된 세션으로 그냥 진입
+        const { email, ...rest } = acct;
+        enterApp(email, rest);
+      });
+    } else {
+      const { email, ...rest } = acct;
+      enterApp(email, rest);
+    }
+  } catch(_) {
+    goScreen('screen-login');
+  }
+})();
 </script>
 </body>
 </html>
