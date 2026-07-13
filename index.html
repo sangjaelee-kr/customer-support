@@ -603,7 +603,50 @@ textarea{resize:vertical;min-height:100px;}
         <div class="card" style="padding:0;overflow:hidden;">
           <div class="tbl-scroll list-scroll"><table class="tbl">
             <thead><tr>
-              <th>요청 번호</th><th>제목</th><th>카테고리</th><th>긴급도</th><th>상태</th><th>고객사</th><th>요청자</th><th>담당자</th><th>접수일</th>
+              <th>요청 번호</th><th>제목</th>
+              <th>
+                <button class="th-filter-btn" onclick="toggleTkFilterPop(this,'category')">카테고리 <span class="th-filter-caret">▾</span></button>
+                <div class="th-filter-pop" id="tk-pop-category">
+                  <label class="th-filter-opt"><input type="checkbox" value="tech_support"> 기술지원</label>
+                  <label class="th-filter-opt"><input type="checkbox" value="contract"> 계약 문의</label>
+                  <label class="th-filter-opt"><input type="checkbox" value="license"> 라이선스 문의</label>
+                  <label class="th-filter-opt"><input type="checkbox" value="education"> 교육 문의</label>
+                  <label class="th-filter-opt"><input type="checkbox" value="other"> 기타</label>
+                  <div class="th-filter-foot">
+                    <button class="th-filter-clear" onclick="clearTkFilter('category')">초기화</button>
+                    <button class="th-filter-apply" onclick="applyTkFilter('category')">적용</button>
+                  </div>
+                </div>
+              </th>
+              <th>
+                <button class="th-filter-btn" onclick="toggleTkFilterPop(this,'priority')">긴급도 <span class="th-filter-caret">▾</span></button>
+                <div class="th-filter-pop" id="tk-pop-priority">
+                  <label class="th-filter-opt"><input type="checkbox" value="normal"> 일반</label>
+                  <label class="th-filter-opt"><input type="checkbox" value="high"> 빠른 확인 필요</label>
+                  <label class="th-filter-opt"><input type="checkbox" value="critical"> 긴급</label>
+                  <div class="th-filter-foot">
+                    <button class="th-filter-clear" onclick="clearTkFilter('priority')">초기화</button>
+                    <button class="th-filter-apply" onclick="applyTkFilter('priority')">적용</button>
+                  </div>
+                </div>
+              </th>
+              <th>
+                <button class="th-filter-btn" onclick="toggleTkFilterPop(this,'status')">상태 <span class="th-filter-caret">▾</span></button>
+                <div class="th-filter-pop" id="tk-pop-status">
+                  <label class="th-filter-opt"><input type="checkbox" value="received"> 접수</label>
+                  <label class="th-filter-opt"><input type="checkbox" value="classifying"> 분류 중</label>
+                  <label class="th-filter-opt"><input type="checkbox" value="in_progress"> 처리 중</label>
+                  <label class="th-filter-opt"><input type="checkbox" value="pending_customer"> 고객 확인 필요</label>
+                  <label class="th-filter-opt"><input type="checkbox" value="on_hold"> 보류</label>
+                  <label class="th-filter-opt"><input type="checkbox" value="completed"> 완료</label>
+                  <label class="th-filter-opt"><input type="checkbox" value="cancelled"> 취소</label>
+                  <div class="th-filter-foot">
+                    <button class="th-filter-clear" onclick="clearTkFilter('status')">초기화</button>
+                    <button class="th-filter-apply" onclick="applyTkFilter('status')">적용</button>
+                  </div>
+                </div>
+              </th>
+              <th>고객사</th><th>요청자</th><th>담당자</th><th>접수일</th>
             </tr></thead>
             <tbody id="ticket-tbody">
               <tr><td colspan="10" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>
@@ -3117,10 +3160,13 @@ function applyTicketFilter() {
   const q = (document.getElementById('ticket-search')?.value || '').trim().toLowerCase();
   const filtered = allTickets.filter(t => {
     if (q && !(t.ticket_number + ' ' + t.title).toLowerCase().includes(q)) return false;
-    if (ticketFilter === 'all') return true;
-    if (ticketFilter === 'active') return ['received','classifying','assigned','in_progress','pending_customer','on_hold'].includes(t.status);
-    if (ticketFilter === 'completed') return t.status === 'completed';
-    return t.category === ticketFilter;
+    if (ticketFilter === 'active' && !['received','classifying','assigned','in_progress','pending_customer','on_hold'].includes(t.status)) return false;
+    if (ticketFilter === 'completed' && t.status !== 'completed') return false;
+    if (ticketFilter !== 'all' && ticketFilter !== 'active' && ticketFilter !== 'completed' && t.category !== ticketFilter) return false;
+    if (tkFilters.category.length && !tkFilters.category.includes(t.category)) return false;
+    if (tkFilters.priority.length && !tkFilters.priority.includes(t.priority || 'normal')) return false;
+    if (tkFilters.status.length && !tkFilters.status.includes(t.status)) return false;
+    return true;
   });
   renderTickets(filtered);
 }
@@ -4522,6 +4568,43 @@ function populateArDynamicFilters() {
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.th-filter-pop') && !e.target.closest('.th-filter-btn')) closeAllArFilterPops();
 });
+
+// ── 고객 티켓 목록 컬럼 필터 (tk-) ──────────────────────────
+let tkFilters = { category: [], priority: [], status: [] };
+
+function toggleTkFilterPop(btn, key) {
+  const pop = document.getElementById('tk-pop-' + key);
+  if (!pop) return;
+  const isOpen = pop.classList.contains('open');
+  closeAllArFilterPops();
+  if (!isOpen) { pop.classList.add('open'); btn.classList.add('active'); }
+}
+
+function applyTkFilter(key) {
+  const pop = document.getElementById('tk-pop-' + key);
+  if (!pop) return;
+  tkFilters[key] = [...pop.querySelectorAll('input:checked')].map(el => el.value);
+  closeAllArFilterPops();
+  updateTkFilterButtonStates();
+  applyTicketFilter();
+}
+
+function clearTkFilter(key) {
+  const pop = document.getElementById('tk-pop-' + key);
+  if (pop) pop.querySelectorAll('input').forEach(el => el.checked = false);
+  tkFilters[key] = [];
+  closeAllArFilterPops();
+  updateTkFilterButtonStates();
+  applyTicketFilter();
+}
+
+function updateTkFilterButtonStates() {
+  Object.keys(tkFilters).forEach(key => {
+    const pop = document.getElementById('tk-pop-' + key);
+    const btn = pop?.previousElementSibling;
+    if (btn) btn.classList.toggle('active', tkFilters[key].length > 0);
+  });
+}
 
 async function loadAllTickets() {
   const tbody = document.getElementById('ar-tbody');
