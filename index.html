@@ -2678,7 +2678,7 @@ async function showDetail(ticket) {
   const allReqTab = document.querySelector('#main-navtabs .nt[onclick*="p-all-requests"]');
   document.querySelectorAll('#main-navtabs .nt').forEach(s => s.classList.remove('active'));
   if (allReqTab) allReqTab.classList.add('active');
-  await loadMgTickets();
+  await loadAllTickets();
 
   document.getElementById('support-list').style.display = 'none';
   document.getElementById('support-detail').style.display = 'block';
