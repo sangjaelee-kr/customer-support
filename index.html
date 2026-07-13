@@ -2179,6 +2179,7 @@ function doLogout() {
   allTickets = [];
   allUsers = [];
   try { localStorage.removeItem('cs_session'); } catch(_) {}
+  history.replaceState(null, '', location.pathname);
   goScreen('screen-login');
 }
 
