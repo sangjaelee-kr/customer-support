@@ -2243,7 +2243,7 @@ async function loadTicketHistory(ticketId) {
   }).join('');
 }
 
-// ─── integration_logs 연동 이력 ──────────────────────────
+// ─── log_integration 연동 이력 ──────────────────────────
 const INTEG_SYSTEM_BADGE = { salesforce:'b-blue', slack:'b-accent', outlook:'b-gray', notion:'b-gray' };
 const INTEG_STATUS_BADGE  = { success:'b-green', failed:'b-red', pending:'b-amber' };
 const INTEG_STATUS_LABEL  = { success:'성공', failed:'실패', pending:'대기' };
@@ -5312,8 +5312,9 @@ async function saveManage() {
   closeModal('modal-manage');
   showToast('✅ 저장됐습니다.');
   const savedTicketId = mgTicket.id;
+  const wasOpen = !!document.querySelector(`#ar-tbody tr.ticket-row[data-id="${savedTicketId}"].open`);
   await loadAllTickets();
-  openAllTicketRowById(savedTicketId);
+  if (wasOpen) openAllTicketRowById(savedTicketId);
 }
 
 function switchLibTab() {
