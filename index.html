@@ -2165,12 +2165,12 @@ function showPage(tabEl, pageId) {
   if (pageId === 'p-my-requests')  loadTickets().then(fitListHeight);
   if (pageId === 'p-all-requests') loadAllTickets().then(fitListHeight);
   setTimeout(fitListHeight, 50);
-  if (pageId === 'p-customers')   loadCompanies();
-  if (pageId === 'p-users')       loadUsers();
-  if (pageId === 'p-documents')   loadDocuments();
-  if (pageId === 'p-downloads') switchLibTab();
+  if (pageId === 'p-customers')   loadCompanies().then(fitListHeight);
+  if (pageId === 'p-users')       loadUsers().then(fitListHeight);
+  if (pageId === 'p-documents')   loadDocuments().then(fitListHeight);
+  if (pageId === 'p-downloads') { switchLibTab(); setTimeout(fitListHeight, 100); }
   if (pageId === 'p-integration') loadIntegrationLogs();
-  if (pageId === 'p-notify-log')     loadNotifyLog();
+  if (pageId === 'p-notify-log')  loadNotifyLog().then(fitListHeight);
   if (pageId === 'p-request-detail') {
     const isCustomerUser = currentUser && !ADMIN_ROLES.has(currentUser.role);
     if (isCustomerUser) {
