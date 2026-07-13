@@ -422,7 +422,6 @@ textarea{resize:vertical;min-height:100px;}
     <button class="nav-toggle" id="nav-toggle" onclick="toggleDrawer()" aria-label="메뉴">☰</button>
     <div class="logo">B</div>
     <span class="site-name">고객지원 포탈</span>
-    <span id="topbar-role-badge" style="display:none;margin-left:8px;"></span>
     <div id="topbar-company" style="display:none;margin-left:16px;background:var(--accent-l);border:1px solid var(--accent-m);border-radius:99px;padding:4px 14px;font-size:12px;font-weight:600;color:var(--accent-d);"></div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:12px;">
       <!-- 사용자 드롭다운 -->
@@ -2043,9 +2042,10 @@ function applyRoleUI(role) {
     admin:        { text: '관리자', cls: 'b-red' },
   };
   const rl = ROLE_LABELS[role] || { text: role, cls: 'b-gray' };
-  const badge = document.getElementById('topbar-role-badge');
+  const badge = document.getElementById('topbar-role');
   if (badge) {
-    badge.innerHTML = `<span class="badge ${rl.cls}">${rl.text}</span>`;
+    badge.className = `badge ${rl.cls}`;
+    badge.textContent = rl.text;
     badge.style.display = '';
   }
 
@@ -2065,8 +2065,6 @@ function applyRoleUI(role) {
     const ch = currentUser.name.charAt(0);
     ['topbar-name','user-menu-name'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=currentUser.name; });
     ['topbar-avatar','user-menu-avatar'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=ch; });
-    const roleEl = document.getElementById('topbar-role');
-    if (roleEl) { roleEl.textContent = ROLE_LABELS[currentUser.role] || currentUser.role; roleEl.style.display = ''; }
     const emailEl = document.getElementById('user-menu-email');
     if (emailEl) emailEl.textContent = currentUser.email;
   }
