@@ -3095,28 +3095,36 @@ async function loadDashboard() {
     const todayStart = new Date(); todayStart.setHours(0,0,0,0);
     const todayISO = todayStart.toISOString();
     const yesterdayISO = new Date(todayStart.getTime() - 86400000).toISOString();
+    const todayStr = new Date().toISOString().slice(0,10);
+
+    // 역할별 카테고리 제한
+    const STAT_ALLOWED_CATS = {
+      tech_support: ['tech_support'],
+      sales:        ['contract', 'license', 'education'],
+    };
+    const statCats = STAT_ALLOWED_CATS[role] || null;
+    const applyStatCat = (q) => statCats ? q.in('category', statCats) : q;
 
     const [
       { count: todayCount }, { count: yesterdayCount },
       { count: pendingCount }, { count: doneToday },
       { count: companiesCount }
     ] = await Promise.all([
-      sb.from('tickets').select('id',{count:'exact',head:true}).gte('created_at', todayISO),
-      sb.from('tickets').select('id',{count:'exact',head:true}).gte('created_at', yesterdayISO).lt('created_at', todayISO),
-      sb.from('tickets').select('id',{count:'exact',head:true}).in('status', ACTIVE),
-      sb.from('ticket_history').select('id',{count:'exact',head:true}).eq('action','status_changed').ilike('note','%완료%').gte('created_at', todayISO),
+      applyStatCat(sb.from('tickets').select('id',{count:'exact',head:true}).gte('created_at', todayISO)),
+      applyStatCat(sb.from('tickets').select('id',{count:'exact',head:true}).gte('created_at', yesterdayISO).lt('created_at', todayISO)),
+      applyStatCat(sb.from('tickets').select('id',{count:'exact',head:true}).in('status', ACTIVE)),
+      applyStatCat(sb.from('tickets').select('id',{count:'exact',head:true}).eq('status','completed').gte('updated_at', todayISO)),
       sb.from('companies').select('id',{count:'exact',head:true}),
     ]);
 
     const diff = (todayCount ?? 0) - (yesterdayCount ?? 0);
 
     // 지연 건수 — 미처리 중 완료예정일이 오늘보다 이전인 건
-    const todayStr = new Date().toISOString().slice(0,10);
-    const { count: delayedCount } = await sb.from('tickets')
+    const { count: delayedCount } = await applyStatCat(sb.from('tickets')
       .select('id',{count:'exact',head:true})
       .in('status', ACTIVE)
       .lt('due_date', todayStr)
-      .not('due_date','is',null);
+      .not('due_date','is',null));
 
     const todayEl   = document.getElementById('dash-admin-today-val');
     const todaySubEl = document.getElementById('dash-admin-today-sub');
