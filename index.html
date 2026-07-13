@@ -2917,15 +2917,20 @@ async function loadDashboard() {
 
     // 라이선스
     if (companyId) {
-      const { data: co } = await sb.from('companies').select('contract_end').eq('id', companyId).single();
-      if (co) {
+      const { data: contracts } = await sb.from('company_contracts')
+        .select('contract_name, end_date').eq('company_id', companyId)
+        .order('end_date', { ascending: false }).limit(1);
+      const co = contracts?.[0];
+      const licVal = document.getElementById('dash-license-val');
+      const licSub = document.getElementById('dash-license-sub');
+      if (co?.end_date) {
         const today = new Date(); today.setHours(0,0,0,0);
-        const end = co.contract_end ? new Date(co.contract_end) : null;
-        const daysLeft = end ? Math.ceil((end - today) / 86400000) : null;
-        const licVal = document.getElementById('dash-license-val');
-        const licSub = document.getElementById('dash-license-sub');
-        if (licVal) licVal.textContent = daysLeft !== null ? daysLeft : '—';
-        if (licSub) licSub.textContent = co.contract_end ? co.contract_end.slice(0,10) + ' 만료' : '계약 정보 없음';
+        const daysLeft = Math.ceil((new Date(co.end_date) - today) / 86400000);
+        if (licVal) licVal.textContent = daysLeft;
+        if (licSub) licSub.textContent = co.end_date.slice(0,10) + ' 만료' + (co.contract_name ? ' · ' + co.contract_name : '');
+      } else {
+        if (licVal) licVal.textContent = '—';
+        if (licSub) licSub.textContent = '계약 정보 없음';
       }
     }
 
