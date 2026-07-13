@@ -2137,6 +2137,7 @@ function fitListHeight() {
   const body = document.getElementById('main-body');
   if (body) body.scrollTop = 0;
   requestAnimationFrame(() => {
+    const bodyBottom = body ? body.getBoundingClientRect().bottom - 24 : window.innerHeight - 24;
     const LIST_PAGES = ['p-my-requests','p-all-requests','p-downloads','p-customers','p-users','p-notify-log','p-documents'];
     LIST_PAGES.forEach(id => {
       const page = document.getElementById(id);
@@ -2144,7 +2145,7 @@ function fitListHeight() {
       page.querySelectorAll('.tbl-scroll.list-scroll').forEach(scroll => {
         if (scroll.offsetParent === null) return;
         const top = scroll.getBoundingClientRect().top;
-        if (top > 0) { scroll.style.maxHeight = 'none'; scroll.style.height = Math.max(200, window.innerHeight - top - 24) + 'px'; }
+        if (top > 0) { scroll.style.maxHeight = 'none'; scroll.style.height = Math.max(200, bodyBottom - top) + 'px'; }
       });
     });
   });
