@@ -2054,6 +2054,11 @@ function doLogin() {
 function enterApp(email, acct) {
   currentUser = { email, ...acct };
 
+  // 로그인 시각 기록
+  if (sb && acct.id) {
+    sb.from('users').update({ last_login: new Date().toISOString() }).eq('id', acct.id).then(() => {});
+  }
+
   // 통합 셸로 이동 후 역할 UI 적용
   goScreen('screen-main');
   applyRoleUI(acct.role);
