@@ -2069,6 +2069,14 @@ function enterApp(email, acct) {
   // 기본 데이터 로드
   if (acct.role === 'customer' || acct.role === 'internal') loadTickets();
   loadDashboard();
+
+  // URL ?ticket=TK-xxx 파라미터로 직접 접근 시 해당 티켓 상세 표시
+  const ticketParam = new URLSearchParams(window.location.search).get('ticket');
+  if (ticketParam && sb) {
+    sb.from('tickets').select('*').eq('ticket_number', ticketParam).single().then(({ data }) => {
+      if (data) showDetail(data);
+    });
+  }
 }
 
 function applyRoleUI(role) {
