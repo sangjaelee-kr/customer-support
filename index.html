@@ -1490,10 +1490,14 @@ textarea{resize:vertical;min-height:100px;}
       <input type="hidden" id="co-id">
       <div class="form-grid" style="gap:16px;">
 
-        <!-- ① 고객사명 -->
-        <div class="form-group span2">
+        <!-- ① 고객사명 + Salesforce ID -->
+        <div class="form-group">
           <label>고객사명 <span class="req">*</span></label>
           <input type="text" id="co-name" placeholder="㈜ 예시회사">
+        </div>
+        <div class="form-group">
+          <label>Salesforce ID</label>
+          <input type="text" id="co-salesforce-id" placeholder="001XXXXXXXXXXXXXXX">
         </div>
 
         <!-- ② 고객사상태  ③ 고객유형 -->
@@ -3679,6 +3683,7 @@ async function openNewCompanyModal() {
   document.querySelector('#modal-company .btn-primary').textContent = '등록';
   document.getElementById('co-id').value = '';
   document.getElementById('co-name').value = '';
+  document.getElementById('co-salesforce-id').value = '';
   document.getElementById('co-status').value = 'active';
   document.getElementById('co-customer-type').value = '';
   document.getElementById('co-contact-name').value = '';
@@ -3695,6 +3700,7 @@ async function openEditCompany(c) {
   document.querySelector('#modal-company .btn-primary').textContent = '저장';
   document.getElementById('co-id').value = c.id;
   document.getElementById('co-name').value = c.name || '';
+  document.getElementById('co-salesforce-id').value = c.salesforce_id || '';
   document.getElementById('co-status').value = c.status || 'active';
   document.getElementById('co-customer-type').value = c.customer_type || '';
   document.getElementById('co-contact-name').value = c.main_contact_name || '';
@@ -3736,8 +3742,11 @@ async function submitCompany() {
   const emailNotify = document.getElementById('co-email-notify')?.checked ?? true;
   const products    = Array.from(document.querySelectorAll('.co-product-chk:checked')).map(el => el.value);
 
+  const salesforceId = document.getElementById('co-salesforce-id')?.value?.trim() || null;
+
   const payload = {
     name,
+    salesforce_id:              salesforceId,
     status,
     customer_type:              customerType,
     account_manager:            manager,
