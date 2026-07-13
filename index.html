@@ -1181,7 +1181,14 @@ textarea{resize:vertical;min-height:100px;}
               <div>• 기술지원 · 기타 → <strong>#cs-tech-support</strong></div>
               <div>• 계약 · 라이선스 · 교육 문의 → <strong>#cs-contract</strong></div>
             </div>
-            <div style="margin-top:14px;display:flex;justify-content:flex-end;">
+            <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px;">
+              <div style="font-size:11px;font-weight:700;color:var(--faint);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;">최근 이력</div>
+              <div style="overflow-x:auto;"><table class="tbl" style="font-size:11px;">
+                <thead><tr><th>액션</th><th>상태</th><th>소요(ms)</th><th>일시</th></tr></thead>
+                <tbody id="integ-log-slack"><tr><td colspan="4" style="padding:10px;text-align:center;color:var(--faint);">불러오는 중...</td></tr></tbody>
+              </table></div>
+            </div>
+            <div style="margin-top:10px;display:flex;justify-content:flex-end;">
               <button id="btn-test-slack" class="btn btn-outline btn-sm" onclick="testIntegration('slack')">연결 테스트</button>
             </div>
           </div>
@@ -1203,7 +1210,14 @@ textarea{resize:vertical;min-height:100px;}
               <div>• 계약·라이선스 문의 → 영업 담당자 (role: sales)</div>
               <div>• 긴급·지연 요청 → 담당자 + 관리자 + 요청자</div>
             </div>
-            <div style="margin-top:14px;display:flex;justify-content:flex-end;">
+            <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px;">
+              <div style="font-size:11px;font-weight:700;color:var(--faint);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;">최근 이력</div>
+              <div style="overflow-x:auto;"><table class="tbl" style="font-size:11px;">
+                <thead><tr><th>액션</th><th>상태</th><th>소요(ms)</th><th>일시</th></tr></thead>
+                <tbody id="integ-log-gmail"><tr><td colspan="4" style="padding:10px;text-align:center;color:var(--faint);">불러오는 중...</td></tr></tbody>
+              </table></div>
+            </div>
+            <div style="margin-top:10px;display:flex;justify-content:flex-end;">
               <button id="btn-test-gmail" class="btn btn-outline btn-sm" onclick="testIntegration('gmail')">연결 테스트</button>
             </div>
           </div>
@@ -1229,21 +1243,6 @@ textarea{resize:vertical;min-height:100px;}
           </div>
         </div>
 
-        <!-- 연동 이력 로그 -->
-        <div style="margin-top:24px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <div style="font-size:14px;font-weight:700;">연동 이력 로그</div>
-            <button class="btn btn-ghost btn-sm" onclick="loadIntegrationLogs()">새로고침</button>
-          </div>
-          <div class="card" style="padding:0;overflow:hidden;">
-            <div class="tbl-scroll list-scroll"><table class="tbl">
-              <thead><tr><th>시스템</th><th>액션</th><th>방향</th><th>참조 ID</th><th>소요(ms)</th><th>상태</th><th>일시</th></tr></thead>
-              <tbody id="integration-logs-tbody">
-                <tr><td colspan="7" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>
-              </tbody>
-            </table></div>
-          </div>
-        </div>
       </div>
 
   </div><!-- /main-body -->
@@ -2306,36 +2305,35 @@ const INTEG_STATUS_BADGE  = { success:'b-green', failed:'b-red', pending:'b-ambe
 const INTEG_STATUS_LABEL  = { success:'성공', failed:'실패', pending:'대기' };
 
 async function loadIntegrationLogs() {
-  const tbody = document.getElementById('integration-logs-tbody');
+  await Promise.all([
+    loadIntegrationLogFor('slack',   'integ-log-slack'),
+    loadIntegrationLogFor('outlook', 'integ-log-gmail'),
+  ]);
+}
+
+async function loadIntegrationLogFor(system, tbodyId) {
+  const tbody = document.getElementById(tbodyId);
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="7" style="padding:16px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="4" style="padding:10px;text-align:center;color:var(--faint);">불러오는 중...</td></tr>';
   const { data, error } = await sb.from('log_integration')
-    .select('*').order('created_at', { ascending: false }).limit(50);
-  if (error) {
-    tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;text-align:center;color:var(--danger);font-size:13px;">오류: ${error.message}</td></tr>`;
-    return;
-  }
-  if (!data?.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="padding:16px;text-align:center;color:var(--faint);font-size:13px;">연동 이력이 없습니다.</td></tr>';
+    .select('action, status, duration_ms, created_at, error_message')
+    .eq('system', system)
+    .order('created_at', { ascending: false }).limit(5);
+  if (error || !data?.length) {
+    tbody.innerHTML = `<tr><td colspan="4" style="padding:10px;text-align:center;color:var(--faint);">이력 없음</td></tr>`;
     return;
   }
   tbody.innerHTML = data.map(r => {
-    const sysBadge = INTEG_SYSTEM_BADGE[r.system] || 'b-gray';
-    const stBadge  = INTEG_STATUS_BADGE[r.status]  || 'b-gray';
-    const stLabel  = INTEG_STATUS_LABEL[r.status]  || r.status;
-    const dir      = r.direction === 'inbound' ? '← 인바운드' : '→ 아웃바운드';
-    const when     = (r.created_at || '').slice(0,16).replace('T',' ');
-    const dur      = r.duration_ms != null ? `<span style="font-variant-numeric:tabular-nums;">${r.duration_ms}</span>` : '—';
-    return `
-      <tr>
-        <td><span class="badge ${sysBadge}" style="text-transform:capitalize;">${r.system}</span></td>
-        <td style="font-size:12px;">${escHtml(r.action)}</td>
-        <td style="font-size:11px;color:var(--faint);">${dir}</td>
-        <td style="font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums;">${escHtml(r.reference_id || '—')}</td>
-        <td style="font-size:12px;text-align:right;">${dur}</td>
-        <td><span class="badge ${stBadge}">${stLabel}</span>${r.error_message ? `<div style="font-size:10px;color:var(--red);margin-top:2px;">${escHtml(r.error_message.slice(0,40))}</div>` : ''}</td>
-        <td style="font-size:11px;color:var(--faint);">${when}</td>
-      </tr>`;
+    const stBadge = INTEG_STATUS_BADGE[r.status] || 'b-gray';
+    const stLabel = INTEG_STATUS_LABEL[r.status] || r.status;
+    const when    = (r.created_at || '').slice(0,16).replace('T',' ');
+    const dur     = r.duration_ms != null ? r.duration_ms : '—';
+    return `<tr>
+      <td style="font-size:11px;">${escHtml(r.action)}</td>
+      <td><span class="badge ${stBadge}">${stLabel}</span>${r.error_message ? `<div style="font-size:10px;color:var(--red);margin-top:1px;">${escHtml(r.error_message.slice(0,40))}</div>` : ''}</td>
+      <td style="font-size:11px;text-align:right;font-variant-numeric:tabular-nums;">${dur}</td>
+      <td style="font-size:11px;color:var(--faint);white-space:nowrap;">${when}</td>
+    </tr>`;
   }).join('');
 }
 
