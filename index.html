@@ -1181,6 +1181,9 @@ textarea{resize:vertical;min-height:100px;}
               <div>• 기술지원 · 기타 → <strong>#cs-tech-support</strong></div>
               <div>• 계약 · 라이선스 · 교육 문의 → <strong>#cs-contract</strong></div>
             </div>
+            <div style="margin-top:14px;display:flex;justify-content:flex-end;">
+              <button id="btn-test-slack" class="btn btn-outline btn-sm" onclick="testIntegration('slack')">연결 테스트</button>
+            </div>
           </div>
 
           <!-- Gmail API -->
@@ -1199,6 +1202,9 @@ textarea{resize:vertical;min-height:100px;}
               <div>• 신규 요청 → 그룹메일 (INTERNAL_GROUP_EMAIL)</div>
               <div>• 계약·라이선스 문의 → 영업 담당자 (role: sales)</div>
               <div>• 긴급·지연 요청 → 담당자 + 관리자 + 요청자</div>
+            </div>
+            <div style="margin-top:14px;display:flex;justify-content:flex-end;">
+              <button id="btn-test-gmail" class="btn btn-outline btn-sm" onclick="testIntegration('gmail')">연결 테스트</button>
             </div>
           </div>
 
@@ -2318,6 +2324,52 @@ async function loadIntegrationLogs() {
         <td style="font-size:11px;color:var(--faint);">${when}</td>
       </tr>`;
   }).join('');
+}
+
+async function testIntegration(type) {
+  const btnId = type === 'slack' ? 'btn-test-slack' : 'btn-test-gmail';
+  const btn = document.getElementById(btnId);
+  if (btn) { btn.disabled = true; btn.textContent = '테스트 중...'; }
+
+  const fnName   = type === 'slack' ? 'notify-handler' : 'send-email';
+  const system   = type === 'slack' ? 'slack' : 'outlook';
+  const payload  = type === 'slack'
+    ? { table: 'test', type: 'CONNECTION_TEST', record: {}, old_record: {} }
+    : { type: 'CONNECTION_TEST', to: '', subject: '', body: '' };
+
+  const t0 = Date.now();
+  let status = 'success', errorMsg = null, responseData = null;
+  try {
+    const { data, error } = await sb.functions.invoke(fnName, { body: payload });
+    const duration = Date.now() - t0;
+    if (error) { status = 'failed'; errorMsg = error.message; }
+    else responseData = data;
+
+    await sb.from('log_integration').insert({
+      system,
+      action: 'connection_test',
+      direction: 'outbound',
+      status,
+      duration_ms: duration,
+      request: payload,
+      response: responseData ? { body: String(responseData).slice(0, 200) } : null,
+      error_message: errorMsg,
+    });
+
+    showToast(status === 'success'
+      ? `✅ ${type === 'slack' ? 'Slack' : 'Gmail'} 연결 테스트 성공 (${duration}ms)`
+      : `❌ 테스트 실패: ${errorMsg}`, status !== 'success');
+  } catch (e) {
+    const duration = Date.now() - t0;
+    await sb.from('log_integration').insert({
+      system, action: 'connection_test', direction: 'outbound',
+      status: 'failed', duration_ms: duration, error_message: e?.message || String(e),
+    });
+    showToast(`❌ 테스트 실패: ${e?.message || e}`, true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '연결 테스트'; }
+    loadIntegrationLogs();
+  }
 }
 
 // ─── 자료실 관리 ────────────────────────────────────────
