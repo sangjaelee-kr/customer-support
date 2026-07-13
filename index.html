@@ -3011,8 +3011,10 @@ async function loadDashboard() {
   if (role === 'customer' || role === 'internal') {
     const companyId = currentUser.company_id;
     const userId    = currentUser.id;
-    // 소속 고객사 전체 티켓 기준 (company_id 우선, id 있으면 created_by, 둘 다 없으면 전체)
-    const applyFilter = (q) => companyId ? q.eq('company_id', companyId) : userId ? q.eq('created_by', userId) : q;
+    // internal: 본인이 올린 것만 / customer: 소속 고객사 전체
+    const applyFilter = (q) => role === 'internal'
+      ? (userId ? q.eq('created_by', userId) : q)
+      : (companyId ? q.eq('company_id', companyId) : userId ? q.eq('created_by', userId) : q);
 
     // 라이선스
     if (companyId) {
@@ -3192,7 +3194,9 @@ async function loadTickets() {
     .order('created_at', { ascending: false });
 
   if (DEMO_COMPANY_ID) query = query.eq('company_id', DEMO_COMPANY_ID);
-  else if ((currentUser?.role === 'customer' || currentUser?.role === 'internal') && currentUser?.company_id) {
+  else if (currentUser?.role === 'internal' && currentUser?.id) {
+    query = query.eq('created_by', currentUser.id);
+  } else if (currentUser?.role === 'customer' && currentUser?.company_id) {
     query = query.eq('company_id', currentUser.company_id);
   }
 
