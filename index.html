@@ -3615,6 +3615,15 @@ async function submitRequest() {
     }
   }
 
+  // 이메일 알림 발송 (신규 요청)
+  if (sb && ticketId) {
+    sb.from('tickets').select('*, companies(name), users!tickets_created_by_fkey(name,email)').eq('id', ticketId).single().then(({ data: td }) => {
+      if (td) sb.functions.invoke('send-email', {
+        body: { type: 'INSERT', record: td }
+      }).catch(e => console.error('[send-email 신규등록 실패]', e));
+    });
+  }
+
   closeModal('modal-new');
   showToast('✅ ' + (ticketNum || '티켓') + ' 접수 완료.');
   await loadTickets();
