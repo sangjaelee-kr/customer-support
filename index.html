@@ -1785,7 +1785,7 @@ textarea{resize:vertical;min-height:100px;}
     <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
       <div style="font-size:16px;font-weight:800;">공지사항 전체보기</div>
       <div style="display:flex;align-items:center;gap:10px;">
-        <button class="btn btn-outline btn-sm" id="notice-add-btn" style="display:none;" onclick="openNewNoticeModal()">+ 공지 등록</button>
+        <button class="btn btn-outline btn-sm" id="notice-add-btn" style="display:none;" onclick="openNewNoticeModal(true)">+ 공지 등록</button>
         <button onclick="closeModal('modal-notices')" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--faint);">✕</button>
       </div>
     </div>
@@ -3066,7 +3066,10 @@ async function openAllNoticesModal() {
     </div>`).join('');
 }
 
-function openNewNoticeModal() {
+let noticeModalReturnToList = false;
+
+function openNewNoticeModal(fromList) {
+  noticeModalReturnToList = !!fromList;
   document.getElementById('modal-notice-edit-title').textContent = '공지 등록';
   document.getElementById('ntc-id').value = '';
   document.getElementById('ntc-category').value = '안내';
@@ -3076,6 +3079,7 @@ function openNewNoticeModal() {
 }
 
 function openEditNoticeModal(n) {
+  noticeModalReturnToList = true;
   document.getElementById('modal-notice-edit-title').textContent = '공지 수정';
   document.getElementById('ntc-id').value = n.id;
   document.getElementById('ntc-category').value = n.category || '안내';
@@ -3106,7 +3110,7 @@ async function submitNotice() {
   closeModal('modal-notice-edit');
   showToast('✅ 저장됐습니다.');
   loadNotices();
-  openAllNoticesModal();
+  if (noticeModalReturnToList) openAllNoticesModal();
 }
 
 async function deleteNotice(id, title) {
