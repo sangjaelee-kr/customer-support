@@ -5387,22 +5387,18 @@ async function loadRdHistory() {
   const latestLabel = ACTION_LABELS[latest.action] || latest.action;
   if (summaryEl) summaryEl.textContent = `최근: ${latestLabel} · ${fmtTime(latest.created_at)}`;
   if (arrowEl) arrowEl.textContent = `전체 ${data.length}건 보기 ▾`;
-  container.innerHTML = data.map(h => {
-    const color    = ACTION_COLORS[h.action] || 'var(--faint)';
-    const who      = h.changed_by?.name || '';
-    const time     = fmtTime(h.created_at);
-    const metaParts = [who, time].filter(Boolean);
+  container.innerHTML = data.map((h, i) => {
+    const color  = ACTION_COLORS[h.action] || 'var(--faint)';
+    const who    = h.changed_by?.name || '';
+    const time   = fmtTime(h.created_at);
+    const detail = [who, h.note].filter(Boolean).join(' · ');
+    const borderStyle = i < data.length - 1 ? 'border-bottom:1px solid var(--border);' : '';
     return `
-    <div class="tl-item">
-      <div class="tl-dot" style="background:${color};"></div>
-      <div class="tl-content">
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-          <span class="tl-title" style="color:${color};">${ACTION_LABELS[h.action] || h.action}</span>
-          ${who ? `<span style="font-size:11px;font-weight:600;color:var(--text);opacity:.75;">${escHtml(who)}</span>` : ''}
-        </div>
-        ${h.note ? `<div style="font-size:12px;color:var(--muted);margin:3px 0 2px;">${escHtml(h.note)}</div>` : ''}
-        <div class="tl-meta">${time}</div>
-      </div>
+    <div style="display:flex;align-items:baseline;gap:6px;padding:6px 0;${borderStyle}font-size:12px;">
+      <span style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:${color};"></span>
+      <span style="font-weight:700;flex-shrink:0;color:${color};">${ACTION_LABELS[h.action] || h.action}</span>
+      ${detail ? `<span style="color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;">${escHtml(detail)}</span>` : '<span style="flex:1;"></span>'}
+      <span style="color:var(--faint);font-size:10.5px;flex-shrink:0;white-space:nowrap;">${time}</span>
     </div>`;
   }).join('');
 }
