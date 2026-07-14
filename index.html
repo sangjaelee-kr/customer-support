@@ -918,12 +918,13 @@ textarea{resize:vertical;min-height:100px;}
                     <div style="background:var(--surface2);border-radius:var(--r-md);padding:14px;font-size:13px;line-height:1.7;word-break:break-all;overflow-wrap:break-word;white-space:pre-wrap;" id="rd-description">—</div>
                     <!-- 첨부 파일 -->
                     <div id="rd-attachments-card" style="display:none;margin-top:16px;">
-                      <div style="font-size:12px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                      <div onclick="toggleRdAttachments()" style="cursor:pointer;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
                         첨부 파일 <span id="rd-attachments-count" style="font-size:11px;color:var(--faint);font-weight:400;"></span>
-                        <button class="btn btn-outline btn-sm" onclick="document.getElementById('rd-attach-input').click()" style="margin-left:auto;padding:3px 10px;font-size:11px;">+ 추가</button>
+                        <span id="rd-attachments-arrow" style="font-size:11px;color:var(--faint);font-weight:400;"></span>
+                        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();document.getElementById('rd-attach-input').click()" style="margin-left:auto;padding:3px 10px;font-size:11px;">+ 추가</button>
                         <input type="file" id="rd-attach-input" multiple style="display:none;" onchange="rdAddAttachments(this)">
                       </div>
-                      <div id="rd-attachments" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+                      <div id="rd-attachments" style="display:none;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
                     </div>
                     <hr style="border:none;border-top:1px solid var(--border);margin:18px 0;">
                     <!-- 답글 -->
@@ -5255,6 +5256,7 @@ async function loadRdAttachments() {
   const card = document.getElementById('rd-attachments-card');
   const list = document.getElementById('rd-attachments');
   const countEl = document.getElementById('rd-attachments-count');
+  const arrowEl = document.getElementById('rd-attachments-arrow');
   if (!card || !list || !rdTicket) return;
 
   if (!sb) { card.style.display = 'none'; return; }
@@ -5268,16 +5270,22 @@ async function loadRdAttachments() {
 
   if (error) {
     if (countEl) countEl.textContent = '';
+    if (arrowEl) arrowEl.textContent = '';
+    list.style.display = 'flex';
     list.innerHTML = `<div style="color:var(--faint);font-size:12px;padding:8px 0;">오류: ${escHtml(error.message)}</div>`;
     return;
   }
   if (!data || !data.length) {
     if (countEl) countEl.textContent = '';
-    list.innerHTML = '<div style="color:var(--faint);font-size:12px;padding:8px 0;">등록된 첨부파일이 없습니다.</div>';
+    if (arrowEl) arrowEl.textContent = '';
+    list.style.display = 'none';
+    list.innerHTML = '';
     return;
   }
 
   if (countEl) countEl.textContent = `${data.length}개`;
+  if (arrowEl) arrowEl.textContent = '▴';
+  list.style.display = 'flex';
 
   list.innerHTML = data.map(f => {
     const sizeKb = f.file_size ? (f.file_size / 1024).toFixed(0) + ' KB' : '';
@@ -5328,6 +5336,15 @@ async function rdAddAttachments(input) {
   // 첨부파일 없던 경우 카드 표시
   const card = document.getElementById('rd-attachments-card');
   if (card) card.style.display = '';
+}
+
+function toggleRdAttachments() {
+  const list = document.getElementById('rd-attachments');
+  const arrowEl = document.getElementById('rd-attachments-arrow');
+  if (!list || !arrowEl || !arrowEl.textContent) return;
+  const opening = list.style.display === 'none';
+  list.style.display = opening ? 'flex' : 'none';
+  arrowEl.textContent = opening ? '▴' : '▾';
 }
 
 function toggleRdMemo() {
