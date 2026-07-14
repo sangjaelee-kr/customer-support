@@ -5473,20 +5473,21 @@ async function loadRdMessages() {
     const canEdit = isMe || isAdmin;
     const editBtn = canEdit
       ? `<button onclick='editMessage(${JSON.stringify(m.id)}, ${JSON.stringify(m.note || '').replace(/'/g, "&#39;")})'
-           style="font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;padding:0 2px;line-height:1;">수정</button>
+           style="font-size:10.5px;color:var(--muted);background:none;border:none;cursor:pointer;padding:0 2px;line-height:1;">수정</button>
          <button onclick='deleteMessage(${JSON.stringify(m.id)})'
-           style="font-size:11px;color:var(--red,#e53e3e);background:none;border:none;cursor:pointer;padding:0 2px;line-height:1;">삭제</button>`
+           style="font-size:10.5px;color:var(--red,#e53e3e);background:none;border:none;cursor:pointer;padding:0 2px;line-height:1;">삭제</button>`
       : '';
+    const borderStyle = i < data.length - 1 ? 'border-bottom:1px solid var(--border);' : '';
     return `
-    <div style="display:flex;gap:12px;padding:14px 0;${i > 0 ? 'border-top:1px solid var(--border);' : ''}">
-      <div style="flex:1;min-width:0;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <span style="font-size:13px;font-weight:700;color:var(--text);">${escHtml(sender)}</span>
-          <span style="font-size:11px;color:var(--faint);">${time}</span>
-          ${editBtn}
+    <div style="padding:8px 0;${borderStyle}">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:11.5px;font-weight:700;color:var(--text);">${escHtml(sender)}</span>
+          <span style="font-size:10.5px;color:var(--faint);">${time}</span>
         </div>
-        <div id="msg-body-${m.id}" style="font-size:13px;line-height:1.7;color:var(--text);word-break:break-all;white-space:pre-wrap;">${escHtml(m.note || '')}</div>
+        ${editBtn}
       </div>
+      <div id="msg-body-${m.id}" style="font-size:11.5px;line-height:1.5;color:var(--muted);white-space:pre-wrap;word-break:break-all;margin-top:3px;">${escHtml(m.note || '')}</div>
     </div>`;
   }).join('');
 }
@@ -5526,7 +5527,7 @@ async function editMessage(historyId, currentNote) {
 function cancelEditMessage(historyId, originalNote) {
   const el = document.getElementById('msg-body-' + historyId);
   if (!el) return;
-  el.innerHTML = `<div style="font-size:13px;line-height:1.7;color:var(--text);word-break:break-all;white-space:pre-wrap;">${escHtml(originalNote || '')}</div>`;
+  el.innerHTML = `<div style="font-size:11.5px;line-height:1.5;color:var(--muted);word-break:break-all;white-space:pre-wrap;">${escHtml(originalNote || '')}</div>`;
 }
 
 async function deleteMessage(historyId) {
