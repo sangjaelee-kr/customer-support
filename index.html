@@ -905,19 +905,19 @@ textarea{resize:vertical;min-height:100px;}
             <div id="rd-detail-content" style="display:none;flex-direction:column;gap:12px;">
 
               <!-- 상단: 기본 정보 카드 (담당자·상태 우측 상단 인라인) -->
-              <div class="card">
-                <div style="display:grid;grid-template-columns:1fr 340px;gap:22px;">
+              <div class="card" style="padding:10px 14px;">
+                <div style="display:grid;grid-template-columns:1fr 340px;gap:16px;">
                   <!-- 좌측: 본문 -->
                   <div style="min-width:0;">
                     <!-- 제목 + 수정 (같은 줄) -->
-                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;">
                       <div style="font-size:17px;font-weight:800;word-break:break-word;overflow-wrap:break-word;" id="rd-title">—</div>
                       <button id="rd-owner-edit-btn" class="btn btn-outline btn-sm" style="display:none;white-space:nowrap;flex-shrink:0;" onclick="openEditRequestModal()">수정</button>
                     </div>
                     <!-- 고객 문의 내용 -->
-                    <div style="background:var(--surface2);border-radius:var(--r-md);padding:14px;font-size:13px;line-height:1.7;word-break:break-all;overflow-wrap:break-word;white-space:pre-wrap;" id="rd-description">—</div>
+                    <div style="background:var(--surface2);border-radius:var(--r-md);padding:10px 12px;font-size:13px;line-height:1.7;word-break:break-all;overflow-wrap:break-word;white-space:pre-wrap;" id="rd-description">—</div>
                     <!-- 첨부 파일 -->
-                    <div id="rd-attachments-card" style="display:none;margin-top:16px;">
+                    <div id="rd-attachments-card" style="display:none;margin-top:13px;">
                       <div onclick="toggleRdAttachments()" style="cursor:pointer;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
                         첨부 파일 <span id="rd-attachments-count" style="font-size:11px;color:var(--faint);font-weight:400;"></span>
                         <span id="rd-attachments-arrow" style="font-size:11px;color:var(--faint);font-weight:400;"></span>
@@ -926,14 +926,14 @@ textarea{resize:vertical;min-height:100px;}
                       </div>
                       <div id="rd-attachments" style="display:none;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
                     </div>
-                    <hr style="border:none;border-top:1px solid var(--border);margin:18px 0;">
+                    <hr style="border:none;border-top:1px solid var(--border);margin:11px 0;">
                     <!-- 답글 -->
-                    <div class="card-title" style="margin-bottom:16px;">답글</div>
+                    <div class="card-title" style="margin-bottom:8px;">답글</div>
                     <div id="rd-messages" style="display:flex;flex-direction:column;gap:0;max-height:420px;overflow-y:auto;">
                       <div style="color:var(--faint);font-size:13px;padding:8px 0;">등록된 답글이 없습니다.</div>
                     </div>
                     <!-- 새 답글 입력 -->
-                    <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px;">
+                    <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">
                       <div style="flex:1;">
                         <textarea id="rd-customer-reply" rows="3" placeholder="답글을 입력하세요..." style="width:100%;resize:vertical;margin-bottom:8px;"></textarea>
                         <div style="display:flex;justify-content:flex-end;align-items:center;">
@@ -943,14 +943,14 @@ textarea{resize:vertical;min-height:100px;}
                     </div>
                   </div>
                   <!-- 우측: 메타 사이드바 -->
-                  <div style="min-width:0;border-left:1px solid var(--border);padding-left:20px;">
+                  <div style="min-width:0;border-left:1px solid var(--border);padding-left:14px;">
                     <!-- 완료예정일 (고객 계정에는 미노출) -->
-                    <div id="rd-due-date-row" style="display:none;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--border);">
+                    <div id="rd-due-date-row" style="display:none;padding-bottom:9px;margin-bottom:9px;border-bottom:1px solid var(--border);">
                       <div style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">완료예정일</div>
                       <div style="font-size:12.5px;font-weight:600;color:var(--text);" id="rd-due-date-value">—</div>
                     </div>
                     <!-- 내부 메모 (관리자 전용, 접기/펼치기) -->
-                    <div id="rd-memo-card" style="display:none;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--border);">
+                    <div id="rd-memo-card" style="display:none;padding-bottom:9px;margin-bottom:9px;border-bottom:1px solid var(--border);">
                       <div onclick="toggleRdMemo()" style="cursor:pointer;">
                         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
                           <span style="font-weight:700;font-size:12px;">내부 메모</span>
