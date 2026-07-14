@@ -520,7 +520,7 @@ textarea{resize:vertical;min-height:100px;}
           <div class="stats" style="grid-template-columns:repeat(5,1fr);">
             <div class="stat"><div class="stat-label">오늘 신규 요청</div><div class="stat-val" id="dash-admin-today-val">—</div><div class="stat-sub" id="dash-admin-today-sub">불러오는 중...</div></div>
             <div class="stat"><div class="stat-label">미처리</div><div class="stat-val" style="color:var(--red);" id="dash-admin-pending-val">—</div><div class="stat-sub" id="dash-admin-pending-sub">처리 대기 건수</div></div>
-            <div class="stat"><div class="stat-label">지연 (3일+)</div><div class="stat-val" style="color:#e53e3e;font-weight:900;" id="dash-admin-delayed-val">—</div><div class="stat-sub" id="dash-admin-delayed-sub">미처리 중 지연 건</div></div>
+            <div class="stat"><div class="stat-label">지연</div><div class="stat-val" style="color:#e53e3e;font-weight:900;" id="dash-admin-delayed-val">—</div><div class="stat-sub" id="dash-admin-delayed-sub">완료예정일 초과</div></div>
             <div class="stat"><div class="stat-label">처리 완료 (오늘)</div><div class="stat-val" style="color:var(--green);" id="dash-admin-done-val">—</div><div class="stat-sub"></div></div>
             <div class="stat"><div class="stat-label">전체 고객사</div><div class="stat-val" id="dash-admin-companies-val">—</div><div class="stat-sub" id="dash-admin-companies-sub"></div></div>
           </div>
@@ -538,11 +538,11 @@ textarea{resize:vertical;min-height:100px;}
                 <div style="display:flex;gap:6px;">
                   <button id="dash-filter-all" onclick="setDashFilter('all')" style="font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border-strong);background:var(--accent);color:#fff;cursor:pointer;">전체</button>
                   <button id="dash-filter-pending" onclick="setDashFilter('pending')" style="font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border-strong);background:transparent;color:var(--muted);cursor:pointer;">미처리</button>
-                  <button id="dash-filter-delayed" onclick="setDashFilter('delayed')" style="font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border-strong);background:transparent;color:var(--muted);cursor:pointer;">지연 (3일+)</button>
+                  <button id="dash-filter-delayed" onclick="setDashFilter('delayed')" style="font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border-strong);background:transparent;color:var(--muted);cursor:pointer;">지연</button>
                 </div>
               </div>
               <div class="tbl-scroll list-scroll" style="flex:1;min-height:0;overflow:hidden;"><table class="tbl">
-                <thead><tr><th>요청 번호</th><th>고객사</th><th>제목</th><th>카테고리</th><th>상태</th><th>접수일</th></tr></thead>
+                <thead><tr><th>요청 번호</th><th>고객사</th><th>제목</th><th>카테고리</th><th>상태</th><th>접수일</th><th>완료예정일</th></tr></thead>
                 <tbody id="dash-admin-pending-tbody">
                   <tr><td colspan="6" style="padding:16px;text-align:center;color:var(--faint);">불러오는 중...</td></tr>
                 </tbody>
@@ -3197,7 +3197,7 @@ async function loadDashboard() {
     const DASH_ALLOWED_CATS = { tech_support: ['tech_support', 'other'], sales: ['contract', 'license', 'education', 'other'] };
     const dashAllowedCats = DASH_ALLOWED_CATS[role] || null;
     let recentQ = sb.from('tickets')
-      .select('id, ticket_number, title, category, status, priority, created_at, company:company_id(name)')
+      .select('id, ticket_number, title, category, status, priority, created_at, due_date, company:company_id(name)')
       .order('created_at', { ascending: false }).limit(200);
     if (dashAllowedCats) recentQ = recentQ.in('category', dashAllowedCats);
     const { data: recentTickets } = await recentQ;
@@ -3232,19 +3232,16 @@ function renderDashAdminTable(f) {
   if (!ptbody) return;
   const all = window._dashAdminTickets || [];
   const PENDING_STATUSES = ['open', 'in_progress', 'pending'];
-  const now = Date.now();
+  const todayStr = new Date().toISOString().slice(0, 10);
   let tickets = all;
   if (f === 'pending') {
     tickets = all.filter(t => PENDING_STATUSES.includes(t.status));
   } else if (f === 'delayed') {
-    tickets = all.filter(t => {
-      if (!PENDING_STATUSES.includes(t.status)) return false;
-      const created = new Date(t.created_at).getTime();
-      return (now - created) > 3 * 24 * 60 * 60 * 1000;
-    });
+    tickets = all.filter(t => PENDING_STATUSES.includes(t.status) && t.due_date && t.due_date < todayStr);
   }
+  const colspan = 7;
   if (!tickets.length) {
-    ptbody.innerHTML = `<tr><td colspan="6" style="padding:16px;text-align:center;color:var(--faint);">${f === 'delayed' ? '지연 요청 없음' : f === 'pending' ? '미처리 요청 없음' : '요청 없음'}</td></tr>`;
+    ptbody.innerHTML = `<tr><td colspan="${colspan}" style="padding:16px;text-align:center;color:var(--faint);">${f === 'delayed' ? '지연 요청 없음' : f === 'pending' ? '미처리 요청 없음' : '요청 없음'}</td></tr>`;
     return;
   }
   ptbody.innerHTML = tickets.slice(0, 50).map(t => {
@@ -3252,17 +3249,19 @@ function renderDashAdminTable(f) {
     const catC = CATEGORY_BADGE[t.category] || 'b-gray';
     const statL = STATUS_LABELS[t.status] || t.status;
     const statB = STATUS_BADGE[t.status] || 'b-gray';
-    const created = new Date(t.created_at).getTime();
-    const days = Math.floor((now - created) / (24 * 60 * 60 * 1000));
-    const isDelayed = PENDING_STATUSES.includes(t.status) && days >= 3;
+    const isDelayed = PENDING_STATUSES.includes(t.status) && t.due_date && t.due_date < todayStr;
     const rowStyle = isDelayed ? 'cursor:pointer;border-left:3px solid var(--red);' : 'cursor:pointer;';
+    const dueDateDisplay = t.due_date
+      ? `<span style="font-size:12px;${isDelayed ? 'color:var(--red);font-weight:600;' : 'color:var(--faint);'}">${t.due_date}${isDelayed ? ' <span style="font-size:10px;">지연</span>' : ''}</span>`
+      : '<span style="font-size:12px;color:var(--faint);">—</span>';
     return `<tr style="${rowStyle}" onclick="goToManageTicket('${t.id}')">` +
       `<td style="color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums;font-size:12px;">${escHtml(t.ticket_number||'')}</td>` +
       `<td style="font-size:12px;">${escHtml(t.company?.name||'—')}</td>` +
       `<td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(t.title||'')}</td>` +
       `<td><span class="badge ${catC}">${catL}</span></td>` +
       `<td><span class="badge ${statB}" style="font-size:11px;">${statL}</span></td>` +
-      `<td style="font-size:12px;color:var(--faint);">${(t.created_at||'').slice(0,10)}${isDelayed ? ` <span style="color:var(--red);font-size:10px;">+${days}일</span>` : ''}</td></tr>`;
+      `<td style="font-size:12px;color:var(--faint);">${(t.created_at||'').slice(0,10)}</td>` +
+      `<td>${dueDateDisplay}</td></tr>`;
   }).join('');
 }
 
