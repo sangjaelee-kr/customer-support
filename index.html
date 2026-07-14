@@ -534,9 +534,8 @@ textarea{resize:vertical;min-height:100px;}
             </div>
             <div class="card" style="display:flex;flex-direction:column;overflow:hidden;">
               <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;padding-bottom:10px;">
-                <div class="card-title" style="margin-bottom:0;">최근 요청</div>
+                <div class="card-title" style="margin-bottom:0;">요청</div>
                 <div style="display:flex;gap:6px;">
-                  <button id="dash-filter-all" onclick="setDashFilter('all')" style="font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border-strong);background:var(--accent);color:#fff;cursor:pointer;">전체</button>
                   <button id="dash-filter-pending" onclick="setDashFilter('pending')" style="font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border-strong);background:transparent;color:var(--muted);cursor:pointer;">미처리</button>
                   <button id="dash-filter-delayed" onclick="setDashFilter('delayed')" style="font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border-strong);background:transparent;color:var(--muted);cursor:pointer;">지연</button>
                 </div>
@@ -3202,7 +3201,8 @@ async function loadDashboard() {
     if (dashAllowedCats) recentQ = recentQ.in('category', dashAllowedCats);
     const { data: recentTickets } = await recentQ;
     window._dashAdminTickets = recentTickets || [];
-    renderDashAdminTable(window._dashAdminFilter || 'all');
+    renderDashAdminTable(window._dashAdminFilter || 'pending');
+    setDashFilter(window._dashAdminFilter || 'pending');
   }
 }
 
@@ -3211,7 +3211,7 @@ window._dashAdminFilter = 'all';
 
 function setDashFilter(f) {
   window._dashAdminFilter = f;
-  ['all','pending','delayed'].forEach(k => {
+  ['pending','delayed'].forEach(k => {
     const btn = document.getElementById('dash-filter-' + k);
     if (!btn) return;
     if (k === f) {
@@ -3244,7 +3244,7 @@ function renderDashAdminTable(f) {
     ptbody.innerHTML = `<tr><td colspan="${colspan}" style="padding:16px;text-align:center;color:var(--faint);">${f === 'delayed' ? '지연 요청 없음' : f === 'pending' ? '미처리 요청 없음' : '요청 없음'}</td></tr>`;
     return;
   }
-  ptbody.innerHTML = tickets.slice(0, 50).map(t => {
+  ptbody.innerHTML = tickets.map(t => {
     const catL = CATEGORY_LABELS[t.category] || t.category || '—';
     const catC = CATEGORY_BADGE[t.category] || 'b-gray';
     const statL = STATUS_LABELS[t.status] || t.status;
