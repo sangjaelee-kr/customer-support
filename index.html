@@ -3974,7 +3974,7 @@ async function loadCompanyContracts() {
       <td style="font-size:12px;">${ct.end_date   ? ct.end_date.slice(0,10)   : '—'}</td>
       <td style="font-size:12px;">${escHtml(ct.customer_contact || '—')}</td>
       <td style="font-size:12px;">${escHtml(ct.bixs_contact    || '—')}</td>
-      <td style="font-size:12px;">${ct.amount ? escHtml(ct.amount) : '—'}</td>
+      <td style="font-size:12px;font-family:monospace;color:var(--faint);letter-spacing:2px;">${ct.amount ? '••••••••••' : '—'}</td>
       <td style="font-size:12px;max-width:120px;white-space:normal;">${escHtml(ct.note || '—')}</td>
       <td style="font-size:12px;">${ct.file_path ? `<button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="downloadPrivateFile('contract-attachments','${escHtml(ct.file_path)}','${escHtml(ct.file_name||'')}')">📎 ${escHtml(ct.file_name || '다운로드')}</button>` : '—'}</td>
       <td style="white-space:nowrap;">
@@ -4010,7 +4010,7 @@ async function loadCompanyLicenses() {
       <td style="font-size:12px;">${l.start_date  ? l.start_date.slice(0,10)  : '—'}</td>
       <td style="font-size:12px;">${expireDisplay}</td>
       <td style="font-size:12px;">${l.renewal_date ? l.renewal_date.slice(0,10) : '—'}</td>
-      <td style="font-size:12px;font-family:monospace;">${escHtml(l.license_key || '—')}</td>
+      <td style="font-size:12px;font-family:monospace;color:var(--faint);letter-spacing:2px;">${l.license_key ? 'XXXX-XXXX-XXXX-XXXX' : '—'}</td>
       <td style="font-size:12px;max-width:100px;white-space:normal;">${escHtml(l.note || '—')}</td>
       <td style="font-size:12px;">${l.file_path ? `<button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="downloadPrivateFile('contract-attachments','${escHtml(l.file_path)}','${escHtml(l.file_name||'')}')">📎 ${escHtml(l.file_name || '다운로드')}</button>` : '—'}</td>
       <td style="white-space:nowrap;">
