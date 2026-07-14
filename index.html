@@ -5518,6 +5518,21 @@ async function saveManage() {
     }
   }
 
+  // 체크박스 선택 시에만 고객에게 상태 변경 메일 발송
+  const sendEmailChecked = document.getElementById('mg-send-email')?.checked;
+  if (sb && sendEmailChecked && status !== prevStatus) {
+    const { data: ticketData } = await sb.from('tickets').select('*, companies(name), users!tickets_created_by_fkey(name,email)').eq('id', mgTicket.id).single();
+    if (ticketData) {
+      sb.functions.invoke('send-email', {
+        body: {
+          type: 'UPDATE',
+          record: ticketData,
+          old_record: { ...ticketData, status: prevStatus }
+        }
+      }).catch(e => console.error('[send-email 상태변경 발송 실패]', e));
+    }
+  }
+
   _savingManage = false;
   closeModal('modal-manage');
   showToast('✅ 저장됐습니다.');
