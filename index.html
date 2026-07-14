@@ -540,8 +540,8 @@ textarea{resize:vertical;min-height:100px;}
                   <button id="dash-filter-delayed" onclick="setDashFilter('delayed')" style="font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border-strong);background:transparent;color:var(--muted);cursor:pointer;">지연</button>
                 </div>
               </div>
-              <div class="tbl-scroll list-scroll" style="flex:1;min-height:0;overflow:hidden;"><table class="tbl">
-                <thead><tr><th>요청 번호</th><th>고객사</th><th>제목</th><th>카테고리</th><th>상태</th><th>접수일</th><th>완료예정일</th></tr></thead>
+              <div class="tbl-scroll list-scroll" style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;"><table class="tbl">
+                <thead><tr><th style="position:sticky;top:0;background:var(--surface2,var(--surface-2,#fff));z-index:1;">요청 번호</th><th style="position:sticky;top:0;background:var(--surface2,var(--surface-2,#fff));z-index:1;">고객사</th><th style="position:sticky;top:0;background:var(--surface2,var(--surface-2,#fff));z-index:1;">제목</th><th style="position:sticky;top:0;background:var(--surface2,var(--surface-2,#fff));z-index:1;">카테고리</th><th style="position:sticky;top:0;background:var(--surface2,var(--surface-2,#fff));z-index:1;">상태</th><th style="position:sticky;top:0;background:var(--surface2,var(--surface-2,#fff));z-index:1;">접수일</th><th style="position:sticky;top:0;background:var(--surface2,var(--surface-2,#fff));z-index:1;">완료예정일</th></tr></thead>
                 <tbody id="dash-admin-pending-tbody">
                   <tr><td colspan="6" style="padding:16px;text-align:center;color:var(--faint);">불러오는 중...</td></tr>
                 </tbody>
