@@ -5537,21 +5537,22 @@ async function loadRdMemos() {
     const editBtn  = canEditM
       ? `<div style="display:flex;gap:6px;">
            <button onclick='editMemo(${JSON.stringify(m.id)}, ${JSON.stringify(m.note || '').replace(/'/g, "&#39;")})'
-             style="font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;padding:0;">수정</button>
+             style="font-size:10.5px;color:var(--muted);background:none;border:none;cursor:pointer;padding:0;">수정</button>
            <button onclick='deleteMemo(${JSON.stringify(m.id)})'
-             style="font-size:11px;color:var(--red,#e53e3e);background:none;border:none;cursor:pointer;padding:0;">삭제</button>
+             style="font-size:10.5px;color:var(--red,#e53e3e);background:none;border:none;cursor:pointer;padding:0;">삭제</button>
          </div>`
       : '';
+    const borderStyle = i < data.length - 1 ? 'border-bottom:1px solid var(--border);' : '';
     return `
-    <div id="memo-item-${m.id}" style="padding:10px 12px;background:var(--surface2);border-radius:var(--r-md);${i > 0 ? 'margin-top:6px;' : 'margin-bottom:6px;'}">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+    <div id="memo-item-${m.id}" style="padding:8px 0;${borderStyle}">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
         <div style="display:flex;align-items:center;gap:6px;">
-          <span style="font-size:12px;font-weight:700;color:var(--text);">${escHtml(author)}</span>
-          <span style="font-size:11px;color:var(--faint);">${time}</span>
+          <span style="font-size:11.5px;font-weight:700;color:var(--text);">${escHtml(author)}</span>
+          <span style="font-size:10.5px;color:var(--faint);">${time}</span>
         </div>
         ${editBtn}
       </div>
-      <div id="memo-body-${m.id}" style="font-size:13px;line-height:1.6;color:var(--muted);white-space:pre-wrap;word-break:break-all;">${escHtml(m.note || '')}</div>
+      <div id="memo-body-${m.id}" style="font-size:11.5px;line-height:1.5;color:var(--muted);white-space:pre-wrap;word-break:break-all;margin-top:3px;">${escHtml(m.note || '')}</div>
     </div>`;
   }).join('');
 
@@ -5582,7 +5583,7 @@ async function editMemo(memoId, currentNote) {
 
 function cancelEditMemo(memoId, originalNote) {
   const el = document.getElementById('memo-body-' + memoId);
-  if (el) el.innerHTML = `<span style="font-size:13px;line-height:1.6;color:var(--muted);white-space:pre-wrap;word-break:break-all;">${escHtml(originalNote || '')}</span>`;
+  if (el) el.innerHTML = `<span style="font-size:11.5px;line-height:1.5;color:var(--muted);white-space:pre-wrap;word-break:break-all;">${escHtml(originalNote || '')}</span>`;
 }
 
 async function deleteMemo(memoId) {
