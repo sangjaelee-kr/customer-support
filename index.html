@@ -113,6 +113,7 @@ textarea{resize:vertical;min-height:100px;}
 .list-scroll{max-height:560px;overflow-y:auto;}
 .list-scroll thead th{position:sticky;top:0;background:var(--surface);z-index:3;will-change:transform;backface-visibility:hidden;}
 .tbl th{font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;}
+.th-filter{font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;border:none;background:transparent;cursor:pointer;padding:0;margin:0;width:100%;appearance:auto;-webkit-appearance:auto;}
 .tbl td{padding:11px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;white-space:nowrap;}
 .tbl tr:last-child td{border-bottom:none;}
 .tbl tr:hover td{background:var(--surface2);cursor:pointer;}
@@ -1151,55 +1152,35 @@ textarea{resize:vertical;min-height:100px;}
             <thead><tr>
               <th>알림 ID</th>
               <th>요청번호</th>
-              <th style="min-width:90px;">
-                <div style="display:flex;flex-direction:column;gap:3px;">
-                  <span>알림 유형</span>
-                  <select id="notify-filter-type" onchange="loadNotifyLog()" style="font-size:10px;padding:2px 4px;border:1px solid var(--border-md);border-radius:4px;background:var(--surface);color:var(--text);width:100%;cursor:pointer;">
-                    <option value="">전체</option>
-                    <option value="slack">Slack</option>
-                    <option value="email">Gmail</option>
-                  </select>
-                </div>
-              </th>
-              <th style="min-width:120px;">
-                <div style="display:flex;flex-direction:column;gap:3px;">
-                  <span>이벤트</span>
-                  <select id="notify-filter-event" onchange="loadNotifyLog()" style="font-size:10px;padding:2px 4px;border:1px solid var(--border-md);border-radius:4px;background:var(--surface);color:var(--text);width:100%;cursor:pointer;">
-                    <option value="">전체</option>
-                    <option value="new_ticket">신규 요청</option>
-                    <option value="status_change">상태 변경</option>
-                    <option value="internal_new">내부 신규 알림</option>
-                    <option value="internal_sales">내부 영업 알림</option>
-                    <option value="urgent">긴급 요청</option>
-                    <option value="assigned">담당자 변경</option>
-                    <option value="overdue">지연 요청</option>
-                  </select>
-                </div>
-              </th>
-              <th style="min-width:90px;">
-                <div style="display:flex;flex-direction:column;gap:3px;">
-                  <span>계정유형</span>
-                  <select id="notify-filter-account" onchange="loadNotifyLog()" style="font-size:10px;padding:2px 4px;border:1px solid var(--border-md);border-radius:4px;background:var(--surface);color:var(--text);width:100%;cursor:pointer;">
-                    <option value="">전체</option>
-                    <option value="internal">내부직원</option>
-                    <option value="customer">고객</option>
-                  </select>
-                </div>
-              </th>
+              <th><select id="notify-filter-type" onchange="loadNotifyLog()" class="th-filter">
+                <option value="">알림 유형</option>
+                <option value="slack">Slack</option>
+                <option value="email">Gmail</option>
+              </select></th>
+              <th><select id="notify-filter-event" onchange="loadNotifyLog()" class="th-filter">
+                <option value="">이벤트</option>
+                <option value="new_ticket">신규 요청</option>
+                <option value="status_change">상태 변경</option>
+                <option value="internal_new">내부 신규 알림</option>
+                <option value="internal_sales">내부 영업 알림</option>
+                <option value="urgent">긴급 요청</option>
+                <option value="assigned">담당자 변경</option>
+                <option value="overdue">지연 요청</option>
+              </select></th>
+              <th><select id="notify-filter-account" onchange="loadNotifyLog()" class="th-filter">
+                <option value="">계정유형</option>
+                <option value="internal">내부직원</option>
+                <option value="customer">고객</option>
+              </select></th>
               <th>수신자</th>
-              <th style="min-width:80px;">
-                <div style="display:flex;flex-direction:column;gap:3px;">
-                  <span>발송 상태</span>
-                  <select id="notify-filter-status" onchange="loadNotifyLog()" style="font-size:10px;padding:2px 4px;border:1px solid var(--border-md);border-radius:4px;background:var(--surface);color:var(--text);width:100%;cursor:pointer;">
-                    <option value="">전체</option>
-                    <option value="sent">성공</option>
-                    <option value="failed">실패</option>
-                  </select>
-                </div>
-              </th>
+              <th><select id="notify-filter-status" onchange="loadNotifyLog()" class="th-filter">
+                <option value="">발송 상태</option>
+                <option value="sent">성공</option>
+                <option value="failed">실패</option>
+              </select></th>
               <th>실패 사유</th>
               <th>발송일시</th>
-              <th><button onclick="document.querySelectorAll('[id^=notify-filter-]').forEach(s=>s.value='');loadNotifyLog();" style="font-size:10px;padding:2px 8px;border:1px solid var(--border-md);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--muted);">초기화</button></th>
+              <th><button onclick="document.querySelectorAll('[id^=notify-filter-]').forEach(s=>s.value='');loadNotifyLog();" style="font-size:11px;padding:2px 8px;border:1px solid var(--border-md);border-radius:4px;background:transparent;cursor:pointer;color:var(--muted);">초기화</button></th>
             </tr></thead>
             <tbody id="notify-tbody">
               <tr><td colspan="10" style="padding:20px;text-align:center;color:var(--faint);font-size:13px;">불러오는 중...</td></tr>
