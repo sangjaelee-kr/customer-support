@@ -519,7 +519,7 @@ textarea{resize:vertical;min-height:100px;}
           <div class="stat-val" id="dash-completed-val">—</div>
           <div class="stat-sub" id="dash-completed-sub">누적 처리 완료</div>
         </div>
-        <div class="stat">
+        <div class="stat" id="dash-avgtime-card">
           <div class="stat-label">평균 처리 시간</div>
           <div class="stat-val" id="dash-avgtime-val">—</div>
           <div class="stat-sub" id="dash-avgtime-sub">최근 30일 기준</div>
@@ -3260,7 +3260,7 @@ async function loadDashboard() {
     if (ipSub) ipSub.textContent = '이번 달 접수 ' + (thisMonth ?? 0) + '건';
     if (cpVal) cpVal.textContent = completed ?? '—';
 
-    // 내부: 오늘 신규요청 카드 표시
+    // 내부: 오늘 신규요청 카드 표시, 평균 처리 시간 카드 숨김
     if (role === 'internal') {
       const todayStat = document.getElementById('dash-today-stat');
       if (todayStat) todayStat.style.display = '';
@@ -3268,6 +3268,8 @@ async function loadDashboard() {
       const tvSub = document.getElementById('dash-today-sub');
       if (tvVal) tvVal.textContent = todayNew ?? 0;
       if (tvSub) tvSub.textContent = '전체 고객사 기준';
+      const avgtimeCard = document.getElementById('dash-avgtime-card');
+      if (avgtimeCard) avgtimeCard.style.display = 'none';
     }
 
     // 평균 처리 시간 (최근 30일 완료 티켓)
