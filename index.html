@@ -470,38 +470,37 @@ textarea{resize:vertical;min-height:100px;}
         <!-- 고객/내부 대시보드 -->
         <div data-show-roles="customer,internal">
       <div class="stats">
-        <!-- 고객 전용 라이선스 카드 (첫 번째 열) -->
+        <!-- 고객 전용 라이선스 카드 (첫 번째 열) — B안 -->
         <div id="dash-license-detail" class="stat" style="display:none;padding:0;overflow:hidden;">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);gap:6px;flex-shrink:0;">
-            <span id="dlc-product" style="font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+          <div style="padding:8px 12px 6px;display:flex;align-items:center;justify-content:space-between;gap:6px;">
+            <span id="dlc-product" style="font-size:11px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
             <span id="dlc-status" style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;flex-shrink:0;"></span>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:center;padding:10px 8px 6px;gap:1px;">
-            <div id="dlc-days" style="font-size:36px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.03em;"></div>
-            <div style="font-size:10px;font-weight:600;color:var(--faint);letter-spacing:.05em;">남은 일자</div>
+          <div style="display:grid;grid-template-columns:auto 1fr;border-top:1px solid var(--border);">
+            <div style="padding:8px 12px;border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">
+              <div id="dlc-days" style="font-size:30px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;"></div>
+              <div style="font-size:9px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;">남은 일자</div>
+            </div>
+            <div style="padding:8px 10px;display:flex;flex-direction:column;gap:3px;">
+              <div style="display:flex;justify-content:space-between;gap:4px;">
+                <span style="font-size:9px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;">형태</span>
+                <span id="dlc-type" style="font-size:10px;font-weight:600;color:var(--text);"></span>
+              </div>
+              <div style="display:flex;justify-content:space-between;gap:4px;">
+                <span style="font-size:9px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;">수량</span>
+                <span id="dlc-qty" style="font-size:10px;font-weight:600;color:var(--text);"></span>
+              </div>
+              <div style="display:flex;justify-content:space-between;gap:4px;">
+                <span style="font-size:9px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;">종료</span>
+                <span id="dlc-end" style="font-size:10px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;"></span>
+              </div>
+              <div style="display:flex;justify-content:space-between;gap:4px;">
+                <span style="font-size:9px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;">담당</span>
+                <span id="dlc-manager" style="font-size:10px;font-weight:600;color:var(--accent);text-align:right;"></span>
+              </div>
+            </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border);">
-            <div style="padding:6px 10px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);">
-              <div style="font-size:9px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;">형태</div>
-              <div id="dlc-type" style="font-size:11px;font-weight:600;color:var(--text);margin-top:2px;"></div>
-            </div>
-            <div style="padding:6px 10px;border-bottom:1px solid var(--border);">
-              <div style="font-size:9px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;">수량</div>
-              <div id="dlc-qty" style="font-size:11px;font-weight:600;color:var(--text);margin-top:2px;"></div>
-            </div>
-            <div style="padding:6px 10px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);">
-              <div style="font-size:9px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;">시작일</div>
-              <div id="dlc-start" style="font-size:11px;font-weight:600;color:var(--text);margin-top:2px;font-variant-numeric:tabular-nums;"></div>
-            </div>
-            <div style="padding:6px 10px;border-bottom:1px solid var(--border);">
-              <div style="font-size:9px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;">종료일</div>
-              <div id="dlc-end" style="font-size:11px;font-weight:600;color:var(--text);margin-top:2px;font-variant-numeric:tabular-nums;"></div>
-            </div>
-          </div>
-          <div style="padding:7px 10px;">
-            <div style="font-size:9px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">영업담당자</div>
-            <div id="dlc-manager" style="font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px;flex-wrap:wrap;"></div>
-          </div>
+          <span id="dlc-start" style="display:none;"></span>
         </div>
         <div class="stat">
           <div class="stat-label">처리 중 요청</div>
@@ -3212,7 +3211,7 @@ async function loadDashboard() {
           document.getElementById('dlc-start').textContent = lic.start_date?.slice(0,10) || '—';
           document.getElementById('dlc-end').textContent   = lic.expire_date?.slice(0,10) || '—';
           const me = document.getElementById('dlc-manager');
-          me.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;display:inline-block;"></span><span style="font-weight:700;color:var(--accent);margin-left:3px;">${coRow?.account_manager || '—'}</span>${mgrEmail ? `<span style="color:var(--border);margin:0 3px;">|</span><a href="mailto:${mgrEmail}" style="font-size:10px;font-weight:400;color:var(--muted);text-decoration:none;">${mgrEmail}</a>` : ''}`;
+          me.textContent = coRow?.account_manager || '—';
           detail.style.display = '';
         } else {
           const licVal = document.getElementById('dash-license-val');
