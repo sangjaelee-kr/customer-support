@@ -3260,14 +3260,16 @@ async function loadDashboard() {
     if (ipSub) ipSub.textContent = '이번 달 접수 ' + (thisMonth ?? 0) + '건';
     if (cpVal) cpVal.textContent = completed ?? '—';
 
-    // 내부: 오늘 신규요청 카드 표시, 평균 처리 시간 카드 숨김
+    // 역할별 오늘 신규요청 카드 표시 제어
+    const todayStat = document.getElementById('dash-today-stat');
     if (role === 'internal') {
-      const todayStat = document.getElementById('dash-today-stat');
       if (todayStat) todayStat.style.display = '';
       const tvVal = document.getElementById('dash-today-val');
       const tvSub = document.getElementById('dash-today-sub');
       if (tvVal) tvVal.textContent = todayNew ?? 0;
       if (tvSub) tvSub.textContent = '전체 고객사 기준';
+    } else {
+      if (todayStat) todayStat.style.display = 'none';
     }
 
     // 평균 처리 시간 (최근 30일 완료 티켓)
