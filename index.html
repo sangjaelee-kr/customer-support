@@ -894,8 +894,8 @@ textarea{resize:vertical;min-height:100px;}
           </div>
 
           <!-- 우: 상세/처리 패널 -->
-          <div class="rd-detail-col" style="overflow-y:auto;padding:0;display:flex;flex-direction:column;gap:0;" id="rd-detail-panel">
-            <div style="padding:16px 20px 0;"><button class="btn btn-ghost btn-sm rd-back-btn" onclick="rdBackToList()" style="">← 목록</button></div>
+          <div class="rd-detail-col" style="overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;" id="rd-detail-panel">
+            <button class="btn btn-ghost btn-sm rd-back-btn" onclick="rdBackToList()">← 목록</button>
             <span id="rd-ticket-num" style="display:none;"></span>
             <!-- 선택 전 안내 -->
             <div id="rd-empty-hint" style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:14px;padding:40px;">
@@ -905,9 +905,9 @@ textarea{resize:vertical;min-height:100px;}
             <div id="rd-detail-content" style="display:none;flex-direction:column;gap:0;">
 
               <!-- 본문 + 사이드바 분리 레이아웃 -->
-              <div id="rd-inner-grid" style="display:grid;grid-template-columns:1fr 320px;gap:0;align-items:stretch;background:#fff;">
+              <div id="rd-inner-grid" style="display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start;">
                 <!-- 좌측: 본문 카드 -->
-                <div class="card" style="padding:16px 20px;border-radius:0;border-left:none;border-right:none;border-top:none;border-bottom:none;margin-bottom:0;min-width:0;">
+                <div class="card" style="min-width:0;">
                     <!-- 제목 + 수정 (같은 줄) -->
                     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;">
                       <div style="font-size:17px;font-weight:800;word-break:break-word;overflow-wrap:break-word;" id="rd-title">—</div>
@@ -942,7 +942,7 @@ textarea{resize:vertical;min-height:100px;}
                     </div>
                 </div>
                 <!-- 우측: 메타 사이드바 -->
-                <div id="rd-meta-sidebar" style="border-left:1px solid var(--border);padding:16px 16px;background:#fff;position:sticky;top:0;min-height:100%;box-sizing:border-box;">
+                <div id="rd-meta-sidebar" class="card" style="padding:16px;min-width:0;">
                     <!-- 완료예정일 (고객 계정에는 미노출) -->
                     <div id="rd-due-date-row" style="display:none;padding-bottom:9px;margin-bottom:9px;border-bottom:1px solid var(--border);">
                       <div style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">완료예정일</div>
