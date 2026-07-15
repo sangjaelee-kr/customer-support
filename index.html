@@ -894,18 +894,18 @@ textarea{resize:vertical;min-height:100px;}
           </div>
 
           <!-- 우: 상세/처리 패널 -->
-          <div class="rd-detail-col" style="overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;" id="rd-detail-panel">
-            <button class="btn btn-ghost btn-sm rd-back-btn" onclick="rdBackToList()" style="align-self:flex-start;">← 목록</button>
+          <div class="rd-detail-col" style="overflow-y:auto;padding:0;display:flex;flex-direction:column;gap:0;" id="rd-detail-panel">
+            <div style="padding:16px 20px 0;"><button class="btn btn-ghost btn-sm rd-back-btn" onclick="rdBackToList()" style="">← 목록</button></div>
             <span id="rd-ticket-num" style="display:none;"></span>
             <!-- 선택 전 안내 -->
-            <div id="rd-empty-hint" style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:14px;">
+            <div id="rd-empty-hint" style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:14px;padding:40px;">
               좌측 목록에서 요청을 선택하면 상세 내용이 표시됩니다.
             </div>
             <!-- 상세 콘텐츠 (선택 후 표시) -->
-            <div id="rd-detail-content" style="display:none;flex-direction:column;gap:12px;">
+            <div id="rd-detail-content" style="display:none;flex-direction:column;gap:0;">
 
               <!-- 상단: 기본 정보 카드 (담당자·상태 우측 상단 인라인) -->
-              <div class="card" style="padding:10px 14px;box-shadow:0 2px 10px rgba(0,0,0,.08);">
+              <div class="card" style="padding:10px 14px;box-shadow:0 2px 10px rgba(0,0,0,.08);border-radius:0;border-left:none;border-right:none;border-top:none;margin-bottom:0;">
                 <div id="rd-inner-grid" style="display:grid;grid-template-columns:1fr 340px;gap:16px;">
                   <!-- 좌측: 본문 -->
                   <div style="min-width:0;">
@@ -5211,13 +5211,6 @@ async function selectRdTicket(idx, directTicket) {
 
   const memoCard = document.getElementById('rd-memo-card');
   if (memoCard) memoCard.style.display = isAdminUser ? '' : 'none';
-
-  // 사이드바: 관리자u{00B7}스탭만 표시, 나머지는 숨기고 그리드 확장
-  const metaSidebar = document.getElementById('rd-meta-sidebar');
-  const innerGrid   = document.getElementById('rd-inner-grid');
-  const showSidebar = isAdminUser || currentUser?.role === 'staff';
-  if (metaSidebar) metaSidebar.style.display = showSidebar ? '' : 'none';
-  if (innerGrid)   innerGrid.style.gridTemplateColumns = showSidebar ? '1fr 340px' : '1fr';
 
   const ownerEditBtn = document.getElementById('rd-owner-edit-btn');
   if (ownerEditBtn) ownerEditBtn.style.display = 'none'; // DB 확인 후 갱신
