@@ -906,7 +906,7 @@ textarea{resize:vertical;min-height:100px;}
 
               <!-- 상단: 기본 정보 카드 (담당자·상태 우측 상단 인라인) -->
               <div class="card" style="padding:10px 14px;box-shadow:0 2px 10px rgba(0,0,0,.08);">
-                <div style="display:grid;grid-template-columns:1fr 340px;gap:16px;">
+                <div id="rd-inner-grid" style="display:grid;grid-template-columns:1fr 340px;gap:16px;">
                   <!-- 좌측: 본문 -->
                   <div style="min-width:0;">
                     <!-- 제목 + 수정 (같은 줄) -->
@@ -943,7 +943,7 @@ textarea{resize:vertical;min-height:100px;}
                     </div>
                   </div>
                   <!-- 우측: 메타 사이드바 -->
-                  <div style="min-width:0;border-left:1px solid var(--border);padding-left:14px;">
+                  <div id="rd-meta-sidebar" style="min-width:0;border-left:1px solid var(--border);padding-left:14px;">
                     <!-- 완료예정일 (고객 계정에는 미노출) -->
                     <div id="rd-due-date-row" style="display:none;padding-bottom:9px;margin-bottom:9px;border-bottom:1px solid var(--border);">
                       <div style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">완료예정일</div>
@@ -5211,6 +5211,13 @@ async function selectRdTicket(idx, directTicket) {
 
   const memoCard = document.getElementById('rd-memo-card');
   if (memoCard) memoCard.style.display = isAdminUser ? '' : 'none';
+
+  // 사이드바: 관리자u{00B7}스탭만 표시, 나머지는 숨기고 그리드 확장
+  const metaSidebar = document.getElementById('rd-meta-sidebar');
+  const innerGrid   = document.getElementById('rd-inner-grid');
+  const showSidebar = isAdminUser || currentUser?.role === 'staff';
+  if (metaSidebar) metaSidebar.style.display = showSidebar ? '' : 'none';
+  if (innerGrid)   innerGrid.style.gridTemplateColumns = showSidebar ? '1fr 340px' : '1fr';
 
   const ownerEditBtn = document.getElementById('rd-owner-edit-btn');
   if (ownerEditBtn) ownerEditBtn.style.display = 'none'; // DB 확인 후 갱신
