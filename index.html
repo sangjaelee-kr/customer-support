@@ -3020,8 +3020,9 @@ async function loadNotices() {
       </div>
       <div class="dash-notice-body" style="max-height:0;overflow:hidden;transition:max-height .2s ease;">
         <div style="font-size:11px;color:var(--muted);line-height:1.5;padding-top:6px;overflow-wrap:break-word;white-space:pre-wrap;">${n.body ? escHtml(n.body) : '<span style="color:var(--faint);">내용 없음</span>'}</div>
-        ${isAdmin ? `<div style="display:flex;justify-content:flex-end;padding-top:8px;">
+        ${isAdmin ? `<div style="display:flex;justify-content:flex-end;gap:6px;padding-top:8px;">
           <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 9px;" onclick='event.stopPropagation();openEditNoticeModal(${escHtml(JSON.stringify(n).replace(/'/g,"&#39;"))})'>✎ 수정</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 9px;color:var(--red);" onclick="event.stopPropagation();deleteNotice('${n.id}','${escHtml((n.title||'').replace(/'/g,"\\'"))}')">삭제</button>
         </div>` : ''}
       </div>
     </div>`).join('');
