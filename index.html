@@ -3944,8 +3944,8 @@ async function populateCompanyUserSelects() {
     `<option value="${escHtml(u.name)}">${escHtml(u.name)}${u.division ? ' (' + escHtml(u.division) + ')' : ''}</option>`
   ).join('');
 
-  salesSel.innerHTML = '<option value="">선택 안 함</option>' + makeOpts(data);
-  techSel.innerHTML  = '<option value="">선택 안 함</option>' + makeOpts(data);
+  salesSel.innerHTML = '<option value="">선택 안 함</option>' + makeOpts(data.filter(u => u.role === 'sales'));
+  techSel.innerHTML  = '<option value="">선택 안 함</option>' + makeOpts(data.filter(u => u.role === 'tech_support'));
 
   if (curSales) salesSel.value = curSales;
   if (curTech)  techSel.value  = curTech;
