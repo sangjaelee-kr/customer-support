@@ -2945,7 +2945,7 @@ function sendExtraMsg() {
 
 function openModal(id) {
   document.getElementById(id).style.display = 'flex';
-  if (id === 'modal-user') populateCompanySelect();
+  if (id === 'modal-user') populateCompanySelect(document.getElementById('u-company').dataset.pending);
   if (id === 'modal-new') {
     const companyEl = document.getElementById('nw-company');
     const contactEl = document.getElementById('nw-contact');
@@ -4745,7 +4745,7 @@ function openEditUser(u) {
   document.getElementById('u-name').value = u.name || '';
   document.getElementById('u-email').value = u.email || '';
   document.getElementById('u-role').value = u.role || 'customer';
-  document.getElementById('u-company').value = u.company_id || '';
+  document.getElementById('u-company').dataset.pending = u.company_id || '';
   document.getElementById('u-phone').value = u.phone || '';
   document.getElementById('u-dept').value = u.department || '';
   openModal('modal-user');
@@ -4801,13 +4801,14 @@ async function deleteUser(id, name) {
 }
 
 
-async function populateCompanySelect() {
+async function populateCompanySelect(selectedId) {
   const sel = document.getElementById('u-company');
   if (!sel || !sb) return;
   const { data } = await sb.from('companies').select('id, name').order('name');
   if (!data) return;
   sel.innerHTML = '<option value="">없음 (내부 직원)</option>' +
     data.map(c => `<option value="${c.id}">${escHtml(c.name)}</option>`).join('');
+  if (selectedId) sel.value = selectedId;
 }
 
 function getSampleTickets() {
